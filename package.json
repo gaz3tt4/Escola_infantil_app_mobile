@@ -18,6 +18,7 @@
     "react-native-screens": "~4.26.0"
   },
   "devDependencies": {
+    "@react-native-community/cli": "latest",
     "@types/react": "~19.2.2",
     "typescript": "~6.0.3"
   },
@@ -28,4 +29,5 @@
     "web": "expo start --web"
   },
   "private": true
+  
 }
