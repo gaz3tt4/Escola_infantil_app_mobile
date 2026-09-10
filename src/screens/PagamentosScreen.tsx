@@ -1,15 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Linking, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { checkout, getInvoices } from '../api/payments';
-import { Button } from '../components/ui/Button';
+import { getInvoices } from '../api/payments';
+import { InvoiceAccordionCard } from '../components/pagamentos/InvoiceAccordionCard';
+import { PaymentModal } from '../components/pagamentos/PaymentModal';
 import { Card } from '../components/ui/Card';
 import { EmptyState } from '../components/ui/EmptyState';
 import { LoadingView } from '../components/ui/LoadingView';
 import { Pill } from '../components/ui/Pill';
 import { ScreenContainer } from '../components/ui/ScreenContainer';
 import { useChildren } from '../context/ChildContext';
-import { colors, radius, spacing, statusColors } from '../theme/colors';
+import { colors, spacing, statusColors } from '../theme/colors';
 import { formatCurrencyBRL, formatDateBR } from '../utils/format';
 import type { Invoice, InvoiceStatus } from '../types';
 
@@ -24,7 +25,8 @@ export function PagamentosScreen() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [isPaying, setIsPaying] = useState(false);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [invoiceInPayment, setInvoiceInPayment] = useState<Invoice | null>(null);
 
   const load = useCallback(
     async (showSpinner = true) => {
@@ -45,32 +47,18 @@ export function PagamentosScreen() {
     load();
   }, [load]);
 
-  const nextDue = useMemo(
-    () =>
-      invoices
-        .filter((invoice) => invoice.status !== 'pago')
-        .sort((a, b) => a.vencimento.localeCompare(b.vencimento))[0] ?? null,
-    [invoices]
-  );
-
-  const history = useMemo(
+  const sorted = useMemo(
     () => invoices.slice().sort((a, b) => b.vencimento.localeCompare(a.vencimento)),
     [invoices]
   );
 
-  async function handlePay() {
-    if (!nextDue) return;
-    setIsPaying(true);
-    try {
-      const response = await checkout({ invoice_id: nextDue.id });
-      await Linking.openURL(response.checkout_url).catch(() => {
-        Alert.alert('Pagamento', 'Checkout gerado. Em produção, isso abrirá o link de pagamento do Asaas.');
-      });
-    } catch {
-      Alert.alert('Não foi possível iniciar o pagamento', 'Tente novamente em instantes.');
-    } finally {
-      setIsPaying(false);
-    }
+  const emAberto = useMemo(() => sorted.filter((invoice) => invoice.status !== 'pago'), [sorted]);
+  const pagas = useMemo(() => sorted.filter((invoice) => invoice.status === 'pago'), [sorted]);
+
+  function handlePagamentoConcluido() {
+    setInvoiceInPayment(null);
+    setExpandedId(null);
+    load(false);
   }
 
   if (!selectedChild) {
@@ -91,35 +79,38 @@ export function PagamentosScreen() {
         <LoadingView label="Carregando pagamentos..." />
       ) : (
         <>
-          {nextDue ? (
-            <View style={styles.dueCard}>
-              <Text style={styles.dueLabel}>Próximo vencimento</Text>
-              <Text style={styles.dueDescription}>{nextDue.descricao}</Text>
-              <Text style={styles.dueValue}>{formatCurrencyBRL(nextDue.valor)}</Text>
-              <Text style={styles.dueDate}>Vence em {formatDateBR(nextDue.vencimento)}</Text>
-              <View style={styles.dueButton}>
-                <Button title="Pagar agora" onPress={handlePay} loading={isPaying} />
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Em aberto</Text>
+            {emAberto.length === 0 ? (
+              <Card>
+                <EmptyState icon="✅" title="Tudo em dia!" description="Não há mensalidades pendentes no momento." />
+              </Card>
+            ) : (
+              <View style={styles.list}>
+                {emAberto.map((invoice) => (
+                  <InvoiceAccordionCard
+                    key={invoice.id}
+                    invoice={invoice}
+                    expanded={expandedId === invoice.id}
+                    onToggle={() => setExpandedId((current) => (current === invoice.id ? null : invoice.id))}
+                    onPagarAgora={() => setInvoiceInPayment(invoice)}
+                  />
+                ))}
               </View>
-            </View>
-          ) : (
-            <Card>
-              <EmptyState icon="✅" title="Tudo em dia!" description="Não há mensalidades pendentes no momento." />
-            </Card>
-          )}
+            )}
+          </View>
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Histórico</Text>
-            <View style={styles.historyList}>
-              {history.map((invoice) => {
+            <View style={styles.list}>
+              {pagas.map((invoice) => {
                 const statusStyle = statusColors[invoice.status];
                 return (
                   <Card key={invoice.id} style={styles.historyItem}>
                     <View style={styles.historyInfo}>
                       <Text style={styles.historyDescription}>{invoice.descricao}</Text>
                       <Text style={styles.historyDate}>
-                        {invoice.status === 'pago' && invoice.pago_em
-                          ? `Pago em ${formatDateBR(invoice.pago_em)}`
-                          : `Vencimento ${formatDateBR(invoice.vencimento)}`}
+                        {invoice.pago_em ? `Pago em ${formatDateBR(invoice.pago_em)}` : formatDateBR(invoice.vencimento)}
                       </Text>
                     </View>
                     <View style={styles.historyRight}>
@@ -133,6 +124,12 @@ export function PagamentosScreen() {
           </View>
         </>
       )}
+
+      <PaymentModal
+        invoice={invoiceInPayment}
+        onClose={() => setInvoiceInPayment(null)}
+        onPaid={handlePagamentoConcluido}
+      />
     </ScreenContainer>
   );
 }
@@ -143,39 +140,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.textPrimary,
   },
-  dueCard: {
-    backgroundColor: colors.schoolGreen,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    gap: 2,
-  },
-  dueLabel: {
-    color: '#EAFBF2',
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  dueDescription: {
-    color: '#fff',
-    fontSize: 15,
-    marginTop: 4,
-  },
-  dueValue: {
-    color: '#fff',
-    fontSize: 32,
-    fontWeight: '800',
-    marginTop: spacing.xs,
-  },
-  dueDate: {
-    color: '#EAFBF2',
-    fontSize: 13,
-    marginTop: 2,
-  },
-  dueButton: {
-    marginTop: spacing.md,
-    alignSelf: 'stretch',
-  },
   section: {
     gap: spacing.sm,
   },
@@ -184,7 +148,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.textPrimary,
   },
-  historyList: {
+  list: {
     gap: spacing.sm,
   },
   historyItem: {

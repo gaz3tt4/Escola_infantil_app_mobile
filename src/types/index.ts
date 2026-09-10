@@ -98,14 +98,44 @@ export interface Invoice {
   vencimento: string; // YYYY-MM-DD
   status: InvoiceStatus;
   pago_em: string | null;
+  // Detalhamento do saldo (mensalidades pendente/atrasado) — usado no accordion.
+  multa?: number;
+  juros?: number;
+  desconto?: number;
+  valor_total?: number;
 }
 
-// POST /payments/checkout
-export interface PaymentCheckoutRequest {
-  invoice_id: number;
+// POST /mensalidades/{id}/pagamento
+export type PaymentMethod = 'CREDIT_CARD' | 'PIX' | 'BOLETO';
+
+export interface CardPaymentPayload {
+  numero: string; // apenas dígitos
+  nome_impresso: string;
+  validade: string; // MM/AA
+  cvv: string;
 }
 
-export interface PaymentCheckoutResponse {
-  checkout_url: string;
-  invoice_id: number;
+export interface PagamentoRequest {
+  forma_pagamento: PaymentMethod;
+  cartao?: CardPaymentPayload;
 }
+
+export interface CreditCardPaymentResult {
+  status: 'aprovado' | 'recusado';
+  mensagem: string;
+}
+
+export interface PixPaymentResult {
+  qr_code_base64: string;
+  copia_cola: string;
+}
+
+export interface BoletoPaymentResult {
+  linha_digitavel: string;
+  boleto_url: string;
+}
+
+export type PagamentoResponse =
+  | ({ forma_pagamento: 'CREDIT_CARD' } & CreditCardPaymentResult)
+  | ({ forma_pagamento: 'PIX' } & PixPaymentResult)
+  | ({ forma_pagamento: 'BOLETO' } & BoletoPaymentResult);
