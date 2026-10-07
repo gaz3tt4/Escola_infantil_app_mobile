@@ -1,8 +1,8 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
+import type { ResumoAluno } from '../../services/perfil';
 import { colors, radius, spacing } from '../../theme';
-import type { ChildProfile } from '../../types';
 
 interface StatItem {
   icon: string;
@@ -12,17 +12,18 @@ interface StatItem {
   fg: string;
 }
 
-export function StatGrid({ profile }: { profile: ChildProfile }) {
+export function StatGrid({ resumo, recados }: { resumo: ResumoAluno; recados: number }) {
   const items: StatItem[] = [
-    { icon: '📅', label: 'Faltas', value: String(profile.faltas), bg: colors.coralSoft, fg: '#B23A2C' },
-    { icon: '🎨', label: 'Atividades', value: String(profile.atividades_count), bg: colors.skySoft, fg: '#1E6FA8' },
+    { icon: '📅', label: 'Faltas', value: String(resumo.faltas), bg: colors.coralSoft, fg: colors.danger },
+    { icon: '🎨', label: 'Atividades', value: String(resumo.atividades), bg: colors.skySoft, fg: '#1E6FA8' },
     {
       icon: '😴',
       label: 'Sonecas',
-      value: `${profile.sonecas.quantidade} · ${profile.sonecas.duracao_media} min`,
+      value: `${resumo.sonecas.quantidade} · ${resumo.sonecas.duracaoMediaMin}min`,
       bg: colors.lavenderSoft,
       fg: '#5B4FBF',
     },
+    { icon: '💌', label: 'Recados', value: String(recados), bg: colors.sunnySoft, fg: colors.warning },
   ];
 
   return (
@@ -41,10 +42,12 @@ export function StatGrid({ profile }: { profile: ChildProfile }) {
 const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
   },
   statCard: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: '45%',
     borderRadius: radius.md,
     padding: spacing.sm + 2,
     alignItems: 'center',
@@ -55,11 +58,11 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   value: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '800',
   },
   label: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
   },
 });

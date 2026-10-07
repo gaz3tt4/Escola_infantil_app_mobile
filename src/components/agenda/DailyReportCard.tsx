@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { alimentacaoLabels, higieneLabels, humorEmojis, humorLabels, sonoLabels } from './labels';
 import { Card } from '../ui/Card';
 import { colors, spacing } from '../../theme';
-import type { DailyReport } from '../../types';
+import type { RelatorioDiario } from '../../services/agenda';
 
 function InfoRow({ icon, label, value }: { icon: string; label: string; value: string }) {
   return (
@@ -18,7 +18,7 @@ function InfoRow({ icon, label, value }: { icon: string; label: string; value: s
   );
 }
 
-export function DailyReportCard({ report }: { report: DailyReport }) {
+export function DailyReportCard({ report }: { report: RelatorioDiario }) {
   return (
     <Card>
       <View style={styles.header}>
@@ -33,8 +33,8 @@ export function DailyReportCard({ report }: { report: DailyReport }) {
           icon="😴"
           label="Sono"
           value={
-            report.sono.duracao_minutos
-              ? `${sonoLabels[report.sono.nivel]} (${report.sono.duracao_minutos} min)`
+            report.sono.duracaoMinutos
+              ? `${sonoLabels[report.sono.nivel]} (${report.sono.duracaoMinutos} min)`
               : sonoLabels[report.sono.nivel]
           }
         />
@@ -55,10 +55,10 @@ export function DailyReportCard({ report }: { report: DailyReport }) {
         </View>
       )}
 
-      {report.observacoes_professor ? (
+      {report.observacoesProfessor ? (
         <View style={styles.observacoes}>
           <Text style={styles.observacoesLabel}>Observações da professora</Text>
-          <Text style={styles.observacoesText}>{report.observacoes_professor}</Text>
+          <Text style={styles.observacoesText}>{report.observacoesProfessor}</Text>
         </View>
       ) : null}
     </Card>

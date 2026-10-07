@@ -3,11 +3,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 
 import { LoadingView } from '../components/ui/LoadingView';
+import { AlunosProvider } from '../context/AlunosContext';
 import { useAuth } from '../context/AuthContext';
-import { useChildren } from '../context/ChildContext';
 import { AlterarSenhaScreen } from '../screens/AlterarSenhaScreen';
 import { FaturaDetalheScreen } from '../screens/FaturaDetalheScreen';
-import { ChildSelectorScreen } from '../screens/ChildSelectorScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { SemConexaoScreen } from '../screens/SemConexaoScreen';
 import { colors } from '../theme';
@@ -46,7 +45,7 @@ export function RootNavigator() {
           <Stack.Screen name="TrocaSenhaObrigatoria" component={AlterarSenhaScreen} options={{ gestureEnabled: false }} />
         ) : (
           <Stack.Group>
-            <Stack.Screen name="Main" component={AuthenticatedGate} />
+            <Stack.Screen name="Main" component={AppHome} />
             <Stack.Screen
               name="FaturaDetalhe"
               component={FaturaDetalheScreen}
@@ -64,16 +63,11 @@ export function RootNavigator() {
   );
 }
 
-function AuthenticatedGate() {
-  const { selectedChild, children_, isLoading } = useChildren();
-
-  if (isLoading && children_.length === 0) {
-    return <LoadingView label="Carregando seus filhos..." />;
-  }
-
-  if (!selectedChild) {
-    return <ChildSelectorScreen />;
-  }
-
-  return <MainTabs />;
+/** Área logada: os alunos ficam em contexto enquanto a sessão existir. */
+function AppHome() {
+  return (
+    <AlunosProvider>
+      <MainTabs />
+    </AlunosProvider>
+  );
 }

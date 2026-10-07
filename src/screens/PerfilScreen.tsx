@@ -1,95 +1,224 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import React, { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { getChildProfile, getRecados } from '../api/profile';
+import { AlunoSwitcher, useAlunosGate } from '../components/AlunoSwitcher';
 import { ChildHeader } from '../components/perfil/ChildHeader';
 import { RecadoCard } from '../components/perfil/RecadoCard';
 import { StatGrid } from '../components/perfil/StatGrid';
+import { Button } from '../components/ui/Button';
+import { Card } from '../components/ui/Card';
+import { DemoBadge } from '../components/ui/DemoBadge';
 import { EmptyState } from '../components/ui/EmptyState';
+import { ErrorState } from '../components/ui/ErrorState';
 import { LoadingView } from '../components/ui/LoadingView';
+import { Mascote } from '../components/ui/Mascote';
 import { ScreenContainer } from '../components/ui/ScreenContainer';
-import { useChildren } from '../context/ChildContext';
-import { colors, spacing } from '../theme';
-import type { ChildProfile, Recado } from '../types';
+import { useAlunos } from '../context/AlunosContext';
+import { useAuth } from '../context/AuthContext';
+import { useAsyncResource } from '../hooks/useAsyncResource';
+import { obterMatriculaAtiva, PERIODO_LABEL } from '../services/alunos';
+import { getMe } from '../services/auth';
+import { listarRecados, obterResumoDoAluno } from '../services/perfil';
+import type { Aluno, Responsavel } from '../services/types';
+import { colors, spacing, typography } from '../theme';
+import { firstName, formatCPF, formatCurrencyBRL, formatDateBR, formatTelefone } from '../utils/format';
+
+function InfoRow({ label, value }: { label: string; value: string | null }) {
+  return (
+    <View style={styles.row}>
+      <Text style={styles.rowLabel}>{label}</Text>
+      <Text style={styles.rowValue}>{value ?? '—'}</Text>
+    </View>
+  );
+}
 
 export function PerfilScreen() {
-  const { selectedChild } = useChildren();
-  const [profile, setProfile] = useState<ChildProfile | null>(null);
-  const [recados, setRecados] = useState<Recado[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const navigation = useNavigation();
+  const { logout } = useAuth();
+  const alunos = useAlunos();
+  const gate = useAlunosGate();
+  const me = useAsyncResource(getMe);
+  const [saindo, setSaindo] = useState(false);
 
-  const load = useCallback(
-    async (showSpinner = true) => {
-      if (!selectedChild) return;
-      if (showSpinner) setIsLoading(true);
-      try {
-        const [profileData, recadosData] = await Promise.all([
-          getChildProfile(selectedChild.id),
-          getRecados(selectedChild.id),
-        ]);
-        setProfile(profileData);
-        setRecados(recadosData);
-      } finally {
-        setIsLoading(false);
-        setRefreshing(false);
-      }
-    },
-    [selectedChild]
-  );
+  const refreshing = me.isRefreshing || alunos.isRefreshing;
+  const [alunoRefreshKey, setAlunoRefreshKey] = useState(0);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  function handleRefresh() {
+    me.reload();
+    alunos.reload();
+    setAlunoRefreshKey((key) => key + 1);
+  }
 
-  if (!selectedChild) {
-    return <LoadingView label="Carregando..." />;
+  async function handleLogout() {
+    setSaindo(true);
+    await logout();
   }
 
   return (
-    <ScreenContainer
-      refreshing={refreshing}
-      onRefresh={() => {
-        setRefreshing(true);
-        load(false);
-      }}
-    >
-      <ChildHeader child={selectedChild} />
+    <ScreenContainer refreshing={refreshing} onRefresh={handleRefresh}>
+      <View style={styles.header}>
+        <View style={styles.headerTexts}>
+          <Text style={typography.title}>
+            {me.data?.nome ? `Olá, ${firstName(me.data.nome)}!` : 'Perfil'}
+          </Text>
+          <Text style={styles.headerSubtitle}>Seus dados e dos seus filhos</Text>
+        </View>
+        <Mascote size={26} segments={3} />
+      </View>
 
-      {isLoading ? (
-        <LoadingView label="Carregando perfil..." />
-      ) : (
-        <>
-          {profile ? <StatGrid profile={profile} /> : null}
+      <ResponsavelCard data={me.data} error={me.error} isLoading={me.isLoading} onRetry={me.reload} />
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Recados</Text>
-            {recados.length === 0 ? (
-              <EmptyState icon="💌" title="Nenhum recado por aqui" description="Quando a escola enviar um recado, ele aparece nesta lista." />
-            ) : (
-              <View style={styles.recadosList}>
-                {recados.map((recado) => (
-                  <RecadoCard key={recado.id} recado={recado} />
-                ))}
-              </View>
-            )}
-          </View>
-        </>
-      )}
+      <AlunoSwitcher />
+      {gate ?? (alunos.selectedAluno ? <AlunoSection key={`${alunos.selectedAluno.id}:${alunoRefreshKey}`} aluno={alunos.selectedAluno} /> : null)}
+
+      <View style={styles.actions}>
+        <Button title="Alterar senha" variant="outline" onPress={() => navigation.navigate('AlterarSenha')} />
+        <Button title="Sair" variant="secondary" onPress={handleLogout} loading={saindo} />
+      </View>
     </ScreenContainer>
   );
 }
 
+function ResponsavelCard({
+  data,
+  error,
+  isLoading,
+  onRetry,
+}: {
+  data: Responsavel | undefined;
+  error: string | null;
+  isLoading: boolean;
+  onRetry: () => void;
+}) {
+  return (
+    <Card style={styles.card}>
+      <Text style={typography.sectionTitle}>Responsável</Text>
+      {isLoading ? <LoadingView /> : null}
+      {error ? <ErrorState message={error} onRetry={onRetry} /> : null}
+      {data ? (
+        <View style={styles.rows}>
+          <InfoRow label="Nome" value={data.nome} />
+          <InfoRow label="E-mail" value={data.email} />
+          <InfoRow label="CPF" value={data.cpf ? formatCPF(data.cpf) : null} />
+          <InfoRow label="Telefone" value={data.telefone ? formatTelefone(data.telefone) : null} />
+        </View>
+      ) : null}
+    </Card>
+  );
+}
+
+/** Dados do aluno em foco: matrícula (API real) + resumo e recados (mock). */
+function AlunoSection({ aluno }: { aluno: Aluno }) {
+  const loader = useCallback(
+    () =>
+      Promise.all([obterMatriculaAtiva(aluno.id), obterResumoDoAluno(aluno.id), listarRecados(aluno.id)]).then(
+        ([matricula, resumo, recados]) => ({ matricula, resumo, recados })
+      ),
+    [aluno.id]
+  );
+  const { data, error, isLoading, reload } = useAsyncResource(loader);
+
+  return (
+    <>
+      <Card style={styles.card}>
+        <ChildHeader aluno={aluno} />
+        {isLoading ? <LoadingView /> : null}
+        {error ? <ErrorState message={error} onRetry={reload} /> : null}
+        {data ? (
+          data.matricula ? (
+            <View style={styles.rows}>
+              <InfoRow label="Turma" value={data.matricula.turma} />
+              <InfoRow label="Período" value={PERIODO_LABEL[data.matricula.periodo] ?? data.matricula.periodo} />
+              <InfoRow label="Mensalidade" value={formatCurrencyBRL(data.matricula.valor_mensalidade)} />
+              <InfoRow label="Matrícula" value={formatCurrencyBRL(data.matricula.valor_matricula)} />
+              <InfoRow label="Início" value={data.matricula.data_inicio ? formatDateBR(data.matricula.data_inicio) : null} />
+              {data.matricula.data_fim ? <InfoRow label="Término" value={formatDateBR(data.matricula.data_fim)} /> : null}
+            </View>
+          ) : (
+            <Text style={styles.semMatricula}>Sem matrícula ativa no momento.</Text>
+          )
+        ) : null}
+      </Card>
+
+      {data ? (
+        <>
+          <View style={styles.sectionHeader}>
+            <Text style={typography.sectionTitle}>Resumo do mês</Text>
+            <DemoBadge />
+          </View>
+          <StatGrid resumo={data.resumo} recados={data.recados.length} />
+
+          <View style={styles.sectionHeader}>
+            <Text style={typography.sectionTitle}>Recados</Text>
+            <DemoBadge />
+          </View>
+          {data.recados.length === 0 ? (
+            <EmptyState icon="💌" title="Nenhum recado por aqui" description="Quando a escola enviar um recado, ele aparece nesta lista." />
+          ) : (
+            <View style={styles.list}>
+              {data.recados.map((recado) => (
+                <RecadoCard key={recado.id} recado={recado} />
+              ))}
+            </View>
+          )}
+        </>
+      ) : null}
+    </>
+  );
+}
+
 const styles = StyleSheet.create({
-  section: {
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+  },
+  headerTexts: {
+    flex: 1,
+  },
+  headerSubtitle: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  card: {
+    gap: spacing.md,
+  },
+  rows: {
     gap: spacing.sm,
   },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: '700',
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+  },
+  rowLabel: {
+    fontSize: 13,
+    color: colors.textSecondary,
+  },
+  rowValue: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
     color: colors.textPrimary,
+    textAlign: 'right',
   },
-  recadosList: {
+  semMatricula: {
+    fontSize: 13,
+    color: colors.textSecondary,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  list: {
     gap: spacing.sm,
+  },
+  actions: {
+    gap: spacing.sm,
+    marginTop: spacing.sm,
   },
 });

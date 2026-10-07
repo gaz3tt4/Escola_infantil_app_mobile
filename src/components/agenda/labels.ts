@@ -1,4 +1,4 @@
-import type { Humor, NivelAlimentacao, NivelHigiene, NivelSono } from '../../types';
+import type { Humor, NivelAlimentacao, NivelHigiene, NivelSono } from '../../services/agenda';
 
 export const alimentacaoLabels: Record<NivelAlimentacao, string> = {
   nao_comeu: 'Não comeu',

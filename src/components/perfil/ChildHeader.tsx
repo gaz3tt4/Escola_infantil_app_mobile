@@ -1,34 +1,36 @@
 import React from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
+import { PERIODO_LABEL } from '../../services/alunos';
+import type { Aluno } from '../../services/types';
 import { colors, spacing } from '../../theme';
-import { calculateAge } from '../../utils/format';
-import type { Child } from '../../types';
 
 function initials(name: string): string {
   return name
     .split(' ')
+    .filter(Boolean)
     .slice(0, 2)
     .map((part) => part[0])
     .join('')
     .toUpperCase();
 }
 
-export function ChildHeader({ child }: { child: Child }) {
+export function alunoMeta(aluno: Aluno): string {
+  const idade = `${aluno.idade} ${aluno.idade === 1 ? 'ano' : 'anos'}`;
+  const turma = aluno.turma ?? 'Sem turma ativa';
+  const periodo = aluno.periodo ? ` · ${PERIODO_LABEL[aluno.periodo]}` : '';
+  return `${idade} · ${turma}${periodo}`;
+}
+
+export function ChildHeader({ aluno }: { aluno: Aluno }) {
   return (
     <View style={styles.container}>
-      {child.foto_url ? (
-        <Image source={{ uri: child.foto_url }} style={styles.avatar} />
-      ) : (
-        <View style={[styles.avatar, styles.avatarFallback]}>
-          <Text style={styles.avatarInitials}>{initials(child.nome)}</Text>
-        </View>
-      )}
-      <View>
-        <Text style={styles.name}>{child.nome}</Text>
-        <Text style={styles.meta}>
-          {calculateAge(child.data_nascimento)} anos · {child.turma.nome}
-        </Text>
+      <View style={styles.avatar}>
+        <Text style={styles.avatarInitials}>{initials(aluno.nome)}</Text>
+      </View>
+      <View style={styles.texts}>
+        <Text style={styles.name}>{aluno.nome}</Text>
+        <Text style={styles.meta}>{alunoMeta(aluno)}</Text>
       </View>
     </View>
   );
@@ -41,22 +43,23 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-  },
-  avatarFallback: {
-    backgroundColor: colors.brandSoft,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.brand,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarInitials: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.brandDark,
+    fontSize: 20,
+    fontWeight: '800',
+    color: colors.onBrand,
+  },
+  texts: {
+    flex: 1,
   },
   name: {
-    fontSize: 19,
+    fontSize: 18,
     fontWeight: '700',
     color: colors.textPrimary,
   },

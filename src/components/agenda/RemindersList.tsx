@@ -4,14 +4,14 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Card } from '../ui/Card';
 import { colors, spacing } from '../../theme';
 import { formatDateBR } from '../../utils/format';
-import type { Reminder } from '../../types';
+import type { Lembrete } from '../../services/agenda';
 
-const TIPO_META: Record<Reminder['tipo'], { icon: string; bg: string; fg: string; label: string }> = {
+const TIPO_META: Record<Lembrete['tipo'], { icon: string; bg: string; fg: string; label: string }> = {
   feriado: { icon: '🎉', bg: colors.coralSoft, fg: '#B23A2C', label: 'Feriado' },
   aula_extra: { icon: '⭐', bg: colors.lavenderSoft, fg: '#5B4FBF', label: 'Aula extra' },
 };
 
-function ReminderItem({ reminder }: { reminder: Reminder }) {
+function ReminderItem({ reminder }: { reminder: Lembrete }) {
   const meta = TIPO_META[reminder.tipo];
   return (
     <View style={styles.item}>
@@ -27,7 +27,7 @@ function ReminderItem({ reminder }: { reminder: Reminder }) {
   );
 }
 
-export function RemindersList({ reminders }: { reminders: Reminder[] }) {
+export function RemindersList({ reminders }: { reminders: Lembrete[] }) {
   return (
     <Card>
       <Text style={styles.title}>Lembretes</Text>

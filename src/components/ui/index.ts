@@ -11,3 +11,4 @@ export { BottomSheet } from './BottomSheet';
 export { ChipSelector } from './ChipSelector';
 export { CopyButton } from './CopyButton';
 export { ErrorState } from './ErrorState';
+export { DemoBadge } from './DemoBadge';

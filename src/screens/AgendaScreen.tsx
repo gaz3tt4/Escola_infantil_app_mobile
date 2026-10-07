@@ -1,80 +1,85 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { getDailyReport } from '../api/dailyReports';
-import { getReminders } from '../api/reminders';
+import { AlunoSwitcher, useAlunosGate } from '../components/AlunoSwitcher';
 import { DailyReportCard } from '../components/agenda/DailyReportCard';
 import { RemindersList } from '../components/agenda/RemindersList';
+import { DemoBadge } from '../components/ui/DemoBadge';
 import { EmptyState } from '../components/ui/EmptyState';
+import { ErrorState } from '../components/ui/ErrorState';
 import { LoadingView } from '../components/ui/LoadingView';
 import { ScreenContainer } from '../components/ui/ScreenContainer';
-import { useChildren } from '../context/ChildContext';
-import { colors, radius, spacing } from '../theme';
-import { addDaysISO, formatDateLong, todayISO } from '../utils/format';
-import type { DailyReport, Reminder } from '../types';
+import { useAlunos } from '../context/AlunosContext';
+import { useAsyncResource } from '../hooks/useAsyncResource';
+import { listarLembretes, obterRelatorioDiario } from '../services/agenda';
+import type { Aluno } from '../services/types';
+import { colors, radius, spacing, typography } from '../theme';
+import { addDaysISO, firstName, formatDateLong, todayISO } from '../utils/format';
 
 export function AgendaScreen() {
-  const { selectedChild } = useChildren();
-  const [date, setDate] = useState(todayISO());
-  const [report, setReport] = useState<DailyReport | null>(null);
-  const [reminders, setReminders] = useState<Reminder[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const { selectedAluno } = useAlunos();
+  const gate = useAlunosGate();
 
-  const load = useCallback(
-    async (showSpinner = true) => {
-      if (!selectedChild) return;
-      if (showSpinner) setIsLoading(true);
-      try {
-        const [reportData, remindersData] = await Promise.all([
-          getDailyReport(selectedChild.id, date),
-          getReminders(),
-        ]);
-        setReport(reportData);
-        setReminders(remindersData);
-      } finally {
-        setIsLoading(false);
-        setRefreshing(false);
-      }
-    },
-    [selectedChild, date]
+  return gate || !selectedAluno ? (
+    <ScreenContainer>
+      <Text style={typography.title}>Agenda</Text>
+      {gate}
+    </ScreenContainer>
+  ) : (
+    <AgendaDoAluno key={selectedAluno.id} aluno={selectedAluno} />
   );
+}
 
-  useEffect(() => {
-    load();
-  }, [load]);
+function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
+  const [date, setDate] = useState(todayISO);
+  const isToday = date === todayISO();
 
-  if (!selectedChild) {
-    return <LoadingView label="Carregando..." />;
-  }
+  const loader = useCallback(
+    () =>
+      Promise.all([obterRelatorioDiario(aluno.id, date), listarLembretes()]).then(([relatorio, lembretes]) => ({
+        relatorio,
+        lembretes,
+      })),
+    [aluno.id, date]
+  );
+  const { data, error, isLoading, isRefreshing, reload } = useAsyncResource(loader);
 
   return (
-    <ScreenContainer
-      refreshing={refreshing}
-      onRefresh={() => {
-        setRefreshing(true);
-        load(false);
-      }}
-    >
+    <ScreenContainer refreshing={isRefreshing} onRefresh={reload}>
       <View style={styles.header}>
-        <Text style={styles.title}>Agenda de {selectedChild.nome.split(' ')[0]}</Text>
+        <View style={styles.titleRow}>
+          <Text style={typography.title}>Agenda de {firstName(aluno.nome)}</Text>
+          <DemoBadge />
+        </View>
+        <AlunoSwitcher />
         <View style={styles.dateNav}>
-          <TouchableOpacity style={styles.dateButton} onPress={() => setDate((d) => addDaysISO(d, -1))}>
+          <TouchableOpacity
+            style={styles.dateButton}
+            onPress={() => setDate((d) => addDaysISO(d, -1))}
+            accessibilityRole="button"
+            accessibilityLabel="Dia anterior"
+          >
             <Text style={styles.dateButtonText}>‹</Text>
           </TouchableOpacity>
-          <Text style={styles.dateLabel}>{formatDateLong(date)}</Text>
-          <TouchableOpacity style={styles.dateButton} onPress={() => setDate((d) => addDaysISO(d, 1))}>
+          <Text style={styles.dateLabel}>{isToday ? 'Hoje' : formatDateLong(date)}</Text>
+          <TouchableOpacity
+            style={[styles.dateButton, isToday && styles.dateButtonDisabled]}
+            onPress={() => setDate((d) => addDaysISO(d, 1))}
+            disabled={isToday}
+            accessibilityRole="button"
+            accessibilityLabel="Próximo dia"
+          >
             <Text style={styles.dateButtonText}>›</Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      {isLoading ? (
-        <LoadingView label="Carregando agenda..." />
-      ) : (
+      {isLoading ? <LoadingView label="Carregando agenda..." /> : null}
+      {error ? <ErrorState message={error} onRetry={reload} /> : null}
+      {data ? (
         <>
-          {report ? (
-            <DailyReportCard report={report} />
+          {data.relatorio ? (
+            <DailyReportCard report={data.relatorio} />
           ) : (
             <EmptyState
               icon="📭"
@@ -82,9 +87,9 @@ export function AgendaScreen() {
               description="A professora ainda não preencheu o relatório diário para essa data."
             />
           )}
-          <RemindersList reminders={reminders} />
+          <RemindersList reminders={data.lembretes} />
         </>
-      )}
+      ) : null}
     </ScreenContainer>
   );
 }
@@ -93,10 +98,11 @@ const styles = StyleSheet.create({
   header: {
     gap: spacing.sm,
   },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.textPrimary,
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
   },
   dateNav: {
     flexDirection: 'row',
@@ -108,17 +114,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
   },
   dateButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.brandSoft,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: colors.brand,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  dateButtonDisabled: {
+    opacity: 0.35,
+  },
   dateButtonText: {
-    fontSize: 18,
-    color: colors.brandDark,
-    fontWeight: '700',
+    fontSize: 20,
+    color: colors.onBrand,
+    fontWeight: '800',
   },
   dateLabel: {
     fontSize: 14,
