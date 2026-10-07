@@ -1,82 +1,132 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { getMe, login as loginRequest } from '../api/auth';
-import { setUnauthorizedHandler } from '../api/client';
-import { clearToken, getToken } from '../api/tokenStorage';
-import type { User } from '../types';
+import * as authService from '../services/auth';
+import { toApiError } from '../services/errors';
+import { setSessionEndedHandler } from '../services/http';
+import { getMustChangePassword, getToken } from '../services/session';
+import type { TrocarSenhaRequest } from '../services/types';
+
+export type AuthStatus =
+  | 'bootstrapping' // lendo o token salvo e validando com /me
+  | 'unreachable' // há token, mas não foi possível falar com o servidor
+  | 'signedOut'
+  | 'signedIn';
 
 interface AuthContextValue {
-  user: User | null;
+  status: AuthStatus;
   isAuthenticated: boolean;
-  isBootstrapping: boolean;
-  isLoggingIn: boolean;
-  loginError: string | null;
+  /** true enquanto o usuário não trocar a senha provisória (vem do login). */
+  mustChangePassword: boolean;
+  /** Mensagem para a tela de login (sessão expirada, acesso desativado). */
+  notice: string | null;
+  /** Motivo de `unreachable`. */
+  bootError: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  changePassword: (payload: TrocarSenhaRequest) => Promise<string>;
+  retryBootstrap: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+/** Valida a sessão salva: sem token → login; com token → GET /me. */
+async function resolveSavedSession(): Promise<
+  { status: 'signedOut' } | { status: 'signedIn'; mustChangePassword: boolean } | { status: 'unreachable'; error: string }
+> {
+  const token = await getToken();
+  if (!token) return { status: 'signedOut' };
+
+  const mustChangePassword = await getMustChangePassword();
+  try {
+    await authService.getMe();
+    return { status: 'signedIn', mustChangePassword };
+  } catch (error) {
+    const apiError = toApiError(error);
+    // 401/403: o interceptor já limpou a sessão e avisou o contexto.
+    if (apiError.status === 401 || apiError.status === 403) return { status: 'signedOut' };
+    // Qualquer outro erro (ex.: responsável sem cadastro, 404) não invalida o token:
+    // entra no app e a tela correspondente mostra o problema.
+    if (apiError.kind === 'http' && apiError.status !== null && apiError.status < 500) {
+      return { status: 'signedIn', mustChangePassword };
+    }
+    return { status: 'unreachable', error: apiError.message };
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isBootstrapping, setIsBootstrapping] = useState(true);
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [loginError, setLoginError] = useState<string | null>(null);
-
-  const logout = useCallback(async () => {
-    await clearToken();
-    setUser(null);
-  }, []);
+  const [status, setStatus] = useState<AuthStatus>('bootstrapping');
+  const [mustChangePassword, setMustChangePassword] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [bootError, setBootError] = useState<string | null>(null);
+  const [bootAttempt, setBootAttempt] = useState(0);
+  const loggingOut = useRef(false);
 
   useEffect(() => {
-    setUnauthorizedHandler(() => {
-      setUser(null);
+    setSessionEndedHandler(({ message }) => {
+      if (loggingOut.current) return;
+      setStatus('signedOut');
+      setMustChangePassword(false);
+      setNotice(message);
     });
-    return () => setUnauthorizedHandler(null);
+    return () => setSessionEndedHandler(null);
   }, []);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const token = await getToken();
-        if (token) {
-          const me = await getMe();
-          setUser(me);
-        }
-      } catch {
-        await clearToken();
-      } finally {
-        setIsBootstrapping(false);
-      }
-    })();
+    let active = true;
+    resolveSavedSession().then((result) => {
+      if (!active) return;
+      if (result.status === 'signedIn') setMustChangePassword(result.mustChangePassword);
+      setBootError(result.status === 'unreachable' ? result.error : null);
+      setStatus(result.status);
+    });
+    return () => {
+      active = false;
+    };
+  }, [bootAttempt]);
+
+  const retryBootstrap = useCallback(() => {
+    setStatus('bootstrapping');
+    setBootAttempt((attempt) => attempt + 1);
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    setIsLoggingIn(true);
-    setLoginError(null);
+    const user = await authService.login(email, password);
+    setNotice(null);
+    setMustChangePassword(user.must_change_password);
+    setStatus('signedIn');
+  }, []);
+
+  const logout = useCallback(async () => {
+    loggingOut.current = true;
     try {
-      const response = await loginRequest({ email, password });
-      setUser(response.user);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Não foi possível entrar. Tente novamente.';
-      setLoginError(message);
-      throw error;
+      await authService.logout();
     } finally {
-      setIsLoggingIn(false);
+      loggingOut.current = false;
+      setMustChangePassword(false);
+      setNotice(null);
+      setStatus('signedOut');
     }
+  }, []);
+
+  const changePassword = useCallback(async (payload: TrocarSenhaRequest) => {
+    const message = await authService.trocarSenha(payload);
+    setMustChangePassword(false);
+    return message;
   }, []);
 
   const value = useMemo<AuthContextValue>(
     () => ({
-      user,
-      isAuthenticated: !!user,
-      isBootstrapping,
-      isLoggingIn,
-      loginError,
+      status,
+      isAuthenticated: status === 'signedIn',
+      mustChangePassword,
+      notice,
+      bootError,
       login,
       logout,
+      changePassword,
+      retryBootstrap,
     }),
-    [user, isBootstrapping, isLoggingIn, loginError, login, logout]
+    [status, mustChangePassword, notice, bootError, login, logout, changePassword, retryBootstrap]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -89,3 +139,4 @@ export function useAuth(): AuthContextValue {
   }
   return ctx;
 }
+

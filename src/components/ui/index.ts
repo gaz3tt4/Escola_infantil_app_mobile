@@ -5,3 +5,5 @@ export { LoadingView } from './LoadingView';
 export { Pill } from './Pill';
 export { ScreenContainer } from './ScreenContainer';
 export { Mascote } from './Mascote';
+export { Notice } from './Notice';
+export { TextField } from './TextField';
