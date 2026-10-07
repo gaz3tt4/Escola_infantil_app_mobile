@@ -1,40 +1,48 @@
-import React, { useState } from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import * as Clipboard from 'expo-clipboard';
+import React from 'react';
+import { Image, StyleSheet, Text, View } from 'react-native';
 
+import { CopyButton } from '../ui/CopyButton';
+import { Notice } from '../ui/Notice';
+import type { ResultadoPagamento } from '../../services/faturas';
 import { colors, radius, spacing } from '../../theme';
-import type { PixPaymentResult } from '../../types';
+import { formatDateTimeBR } from '../../utils/format';
 
-export function PixResult({ data }: { data: PixPaymentResult }) {
-  const [copied, setCopied] = useState(false);
+type PixData = Extract<ResultadoPagamento, { forma: 'pix' }>;
 
-  async function handleCopy() {
-    await Clipboard.setStringAsync(data.copia_cola);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+export function PixResult({ data }: { data: PixData }) {
+  if (!data.copiaECola && !data.qrCodeBase64) {
+    return <Notice message="O Pix foi gerado, mas o código não veio na resposta. Tente novamente em instantes." />;
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.hint}>Escaneie o QR code no app do seu banco ou copie o código abaixo.</Text>
+      <Text style={styles.hint}>Escaneie o QR code no app do seu banco ou copie o código Pix.</Text>
 
-      <View style={styles.qrWrapper}>
-        <Image
-          source={{ uri: `data:image/png;base64,${data.qr_code_base64}` }}
-          style={styles.qr}
-          resizeMode="contain"
-        />
-      </View>
+      {data.qrCodeBase64 ? (
+        <View style={styles.qrWrapper}>
+          <Image
+            source={{ uri: `data:image/png;base64,${data.qrCodeBase64}` }}
+            style={styles.qr}
+            resizeMode="contain"
+            accessibilityLabel="QR code Pix"
+          />
+        </View>
+      ) : null}
 
-      <View style={styles.codeBox}>
-        <Text style={styles.code} numberOfLines={3}>
-          {data.copia_cola}
-        </Text>
-      </View>
+      {data.expiracao ? <Text style={styles.expiracao}>Válido até {formatDateTimeBR(data.expiracao)}</Text> : null}
 
-      <TouchableOpacity style={styles.copyButton} activeOpacity={0.8} onPress={handleCopy}>
-        <Text style={styles.copyButtonText}>{copied ? 'Copiado!' : 'Copiar código Pix'}</Text>
-      </TouchableOpacity>
+      {data.copiaECola ? (
+        <>
+          <View style={styles.codeBox}>
+            <Text style={styles.code} numberOfLines={3} selectable>
+              {data.copiaECola}
+            </Text>
+          </View>
+          <View style={styles.stretch}>
+            <CopyButton value={data.copiaECola} label="Copiar código Pix" />
+          </View>
+        </>
+      ) : null}
     </View>
   );
 }
@@ -50,18 +58,23 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   qrWrapper: {
-    width: 180,
-    height: 180,
+    width: 200,
+    height: 200,
     backgroundColor: colors.surface,
     borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 2,
+    borderColor: colors.brand,
     alignItems: 'center',
     justifyContent: 'center',
   },
   qr: {
-    width: 160,
-    height: 160,
+    width: 180,
+    height: 180,
+  },
+  expiracao: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.warning,
   },
   codeBox: {
     alignSelf: 'stretch',
@@ -75,16 +88,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textPrimary,
   },
-  copyButton: {
+  stretch: {
     alignSelf: 'stretch',
-    borderRadius: radius.pill,
-    paddingVertical: spacing.md - 2,
-    alignItems: 'center',
-    backgroundColor: colors.brand,
-  },
-  copyButtonText: {
-    color: colors.onBrand,
-    fontSize: 16,
-    fontWeight: '600',
   },
 });

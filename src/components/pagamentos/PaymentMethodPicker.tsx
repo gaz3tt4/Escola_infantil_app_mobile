@@ -1,33 +1,45 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+import type { FormaPagamento } from '../../services/faturas';
 import { colors, radius, spacing } from '../../theme';
-import type { PaymentMethod } from '../../types';
 
-const OPTIONS: { method: PaymentMethod; icon: string; label: string; description: string }[] = [
-  { method: 'CREDIT_CARD', icon: '💳', label: 'Cartão de crédito', description: 'Pague com os dados do seu cartão' },
-  { method: 'PIX', icon: '⚡', label: 'Pix', description: 'QR code ou copia e cola, aprovação na hora' },
-  { method: 'BOLETO', icon: '🧾', label: 'Boleto bancário', description: 'Vence em até 3 dias úteis' },
+const OPTIONS: { forma: FormaPagamento; icon: string; label: string; description: string }[] = [
+  { forma: 'pix', icon: '⚡', label: 'Pix', description: 'QR code ou copia e cola, compensação na hora' },
+  { forma: 'boleto', icon: '🧾', label: 'Boleto bancário', description: 'Linha digitável ou PDF do boleto' },
 ];
 
-export function PaymentMethodPicker({ onSelect }: { onSelect: (method: PaymentMethod) => void }) {
+interface PaymentMethodPickerProps {
+  onSelect: (forma: FormaPagamento) => void;
+  /** Modo seleção (radio) em vez de ação imediata. */
+  selected?: FormaPagamento;
+  disabled?: boolean;
+}
+
+export function PaymentMethodPicker({ onSelect, selected, disabled }: PaymentMethodPickerProps) {
   return (
     <View style={styles.container}>
-      {OPTIONS.map((option) => (
-        <TouchableOpacity
-          key={option.method}
-          style={styles.option}
-          activeOpacity={0.7}
-          onPress={() => onSelect(option.method)}
-        >
-          <Text style={styles.icon}>{option.icon}</Text>
-          <View style={styles.texts}>
-            <Text style={styles.label}>{option.label}</Text>
-            <Text style={styles.description}>{option.description}</Text>
-          </View>
-          <Text style={styles.chevron}>›</Text>
-        </TouchableOpacity>
-      ))}
+      {OPTIONS.map((option) => {
+        const isSelected = selected === option.forma;
+        return (
+          <TouchableOpacity
+            key={option.forma}
+            style={[styles.option, isSelected && styles.optionSelected]}
+            activeOpacity={0.7}
+            disabled={disabled}
+            onPress={() => onSelect(option.forma)}
+            accessibilityRole="button"
+            accessibilityState={{ selected: isSelected, disabled }}
+          >
+            <Text style={styles.icon}>{option.icon}</Text>
+            <View style={styles.texts}>
+              <Text style={styles.label}>{option.label}</Text>
+              <Text style={styles.description}>{option.description}</Text>
+            </View>
+            {selected === undefined ? <Text style={styles.chevron}>›</Text> : <View style={[styles.radio, isSelected && styles.radioOn]} />}
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 }
@@ -42,9 +54,13 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     backgroundColor: colors.background,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.border,
     padding: spacing.md,
+  },
+  optionSelected: {
+    borderColor: colors.brand,
+    backgroundColor: colors.brandSoft,
   },
   icon: {
     fontSize: 24,
@@ -65,5 +81,16 @@ const styles = StyleSheet.create({
   chevron: {
     fontSize: 22,
     color: colors.textMuted,
+  },
+  radio: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: colors.textMuted,
+  },
+  radioOn: {
+    borderColor: colors.brandDark,
+    borderWidth: 6,
   },
 });

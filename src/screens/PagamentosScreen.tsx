@@ -1,182 +1,167 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { getInvoices } from '../api/payments';
-import { InvoiceAccordionCard, statusColors } from '../components/pagamentos/InvoiceAccordionCard';
-import { PaymentModal } from '../components/pagamentos/PaymentModal';
+import { CobrancaAvulsaSheet } from '../components/pagamentos/CobrancaAvulsaSheet';
+import { FaturaCard } from '../components/pagamentos/FaturaCard';
+import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
+import { ChipSelector } from '../components/ui/ChipSelector';
 import { EmptyState } from '../components/ui/EmptyState';
+import { ErrorState } from '../components/ui/ErrorState';
 import { LoadingView } from '../components/ui/LoadingView';
-import { Pill } from '../components/ui/Pill';
 import { ScreenContainer } from '../components/ui/ScreenContainer';
-import { useChildren } from '../context/ChildContext';
-import { colors, spacing } from '../theme';
-import { formatCurrencyBRL, formatDateBR } from '../utils/format';
-import type { Invoice, InvoiceStatus } from '../types';
+import { useAsyncResource } from '../hooks/useAsyncResource';
+import { listarFaturasDosMeusAlunos, podePagar, type FaturaComAluno } from '../services/faturas';
+import { colors, spacing, typography } from '../theme';
+import { formatCurrencyBRL } from '../utils/format';
 
-const STATUS_LABEL: Record<InvoiceStatus, string> = {
-  pago: 'Pago',
-  pendente: 'Pendente',
-  atrasado: 'Atrasado',
-};
+type Filtro = number | 'todos';
 
 export function PagamentosScreen() {
-  const { selectedChild } = useChildren();
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [invoiceInPayment, setInvoiceInPayment] = useState<Invoice | null>(null);
+  const navigation = useNavigation();
+  const { data, error, isLoading, isRefreshing, reload } = useAsyncResource(listarFaturasDosMeusAlunos);
+  const [filtro, setFiltro] = useState<Filtro>('todos');
+  const [avulsaAberta, setAvulsaAberta] = useState(false);
 
-  const load = useCallback(
-    async (showSpinner = true) => {
-      if (!selectedChild) return;
-      if (showSpinner) setIsLoading(true);
-      try {
-        const data = await getInvoices(selectedChild.id);
-        setInvoices(data);
-      } finally {
-        setIsLoading(false);
-        setRefreshing(false);
+  // Recarrega ao voltar do detalhe (o status pode ter mudado), mas não no primeiro foco.
+  const firstFocus = useRef(true);
+  useFocusEffect(
+    useCallback(() => {
+      if (firstFocus.current) {
+        firstFocus.current = false;
+        return;
       }
-    },
-    [selectedChild]
+      reload();
+    }, [reload])
   );
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  const alunos = useMemo(() => data?.alunos ?? [], [data]);
+  const filtroAtivo: Filtro = filtro !== 'todos' && alunos.some((aluno) => aluno.id === filtro) ? filtro : 'todos';
 
-  const sorted = useMemo(
-    () => invoices.slice().sort((a, b) => b.vencimento.localeCompare(a.vencimento)),
-    [invoices]
-  );
+  const { emAberto, historico, totalEmAberto } = useMemo(() => {
+    const faturas = (data?.faturas ?? []).filter((fatura) => filtroAtivo === 'todos' || fatura.alunoId === filtroAtivo);
+    const abertas = faturas.filter((fatura) => podePagar(fatura.status));
+    return {
+      emAberto: abertas,
+      historico: faturas.filter((fatura) => !podePagar(fatura.status)),
+      totalEmAberto: abertas.reduce((total, fatura) => total + fatura.valor, 0),
+    };
+  }, [data, filtroAtivo]);
 
-  const emAberto = useMemo(() => sorted.filter((invoice) => invoice.status !== 'pago'), [sorted]);
-  const pagas = useMemo(() => sorted.filter((invoice) => invoice.status === 'pago'), [sorted]);
-
-  function handlePagamentoConcluido() {
-    setInvoiceInPayment(null);
-    setExpandedId(null);
-    load(false);
+  function openFatura(fatura: Pick<FaturaComAluno, 'id' | 'alunoNome'>) {
+    navigation.navigate('FaturaDetalhe', { faturaId: fatura.id, alunoNome: fatura.alunoNome });
   }
 
-  if (!selectedChild) {
-    return <LoadingView label="Carregando..." />;
+  function renderContent() {
+    if (isLoading) return <LoadingView label="Carregando pagamentos..." />;
+    if (error) return <ErrorState message={error} onRetry={reload} />;
+    if (alunos.length === 0) {
+      return <EmptyState icon="🎒" title="Nenhum aluno vinculado" description="Fale com a secretaria da escola para vincular seus filhos à sua conta." />;
+    }
+
+    const showAluno = alunos.length > 1 && filtroAtivo === 'todos';
+
+    return (
+      <>
+        {alunos.length > 1 ? (
+          <ChipSelector<Filtro>
+            options={[{ value: 'todos', label: 'Todos' }, ...alunos.map((aluno) => ({ value: aluno.id, label: aluno.nome }))]}
+            value={filtroAtivo}
+            onChange={setFiltro}
+          />
+        ) : null}
+
+        {emAberto.length > 0 ? (
+          <Card tint={colors.brandSoft} style={styles.resumo}>
+            <Text style={styles.resumoLabel}>Total em aberto</Text>
+            <Text style={styles.resumoValor}>{formatCurrencyBRL(totalEmAberto)}</Text>
+          </Card>
+        ) : null}
+
+        <View style={styles.section}>
+          <Text style={typography.sectionTitle}>Em aberto</Text>
+          {emAberto.length === 0 ? (
+            <Card>
+              <EmptyState icon="✅" title="Tudo em dia!" description="Não há cobranças em aberto no momento." />
+            </Card>
+          ) : (
+            <View style={styles.list}>
+              {emAberto.map((fatura) => (
+                <FaturaCard key={fatura.id} fatura={fatura} showAluno={showAluno} onPress={() => openFatura(fatura)} />
+              ))}
+            </View>
+          )}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={typography.sectionTitle}>Histórico</Text>
+          {historico.length === 0 ? (
+            <Text style={styles.emptyHistory}>Nenhuma cobrança paga ou cancelada ainda.</Text>
+          ) : (
+            <View style={styles.list}>
+              {historico.map((fatura) => (
+                <FaturaCard key={fatura.id} fatura={fatura} showAluno={showAluno} onPress={() => openFatura(fatura)} />
+              ))}
+            </View>
+          )}
+        </View>
+      </>
+    );
   }
 
   return (
-    <ScreenContainer
-      refreshing={refreshing}
-      onRefresh={() => {
-        setRefreshing(true);
-        load(false);
-      }}
-    >
-      <Text style={styles.title}>Pagamentos</Text>
+    <ScreenContainer refreshing={isRefreshing} onRefresh={reload}>
+      <View style={styles.header}>
+        <Text style={typography.title}>Pagamentos</Text>
+        {alunos.length > 0 ? (
+          <Button title="Adiantar / gerar cobrança" variant="outline" onPress={() => setAvulsaAberta(true)} />
+        ) : null}
+      </View>
 
-      {isLoading ? (
-        <LoadingView label="Carregando pagamentos..." />
-      ) : (
-        <>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Em aberto</Text>
-            {emAberto.length === 0 ? (
-              <Card>
-                <EmptyState icon="✅" title="Tudo em dia!" description="Não há mensalidades pendentes no momento." />
-              </Card>
-            ) : (
-              <View style={styles.list}>
-                {emAberto.map((invoice) => (
-                  <InvoiceAccordionCard
-                    key={invoice.id}
-                    invoice={invoice}
-                    expanded={expandedId === invoice.id}
-                    onToggle={() => setExpandedId((current) => (current === invoice.id ? null : invoice.id))}
-                    onPagarAgora={() => setInvoiceInPayment(invoice)}
-                  />
-                ))}
-              </View>
-            )}
-          </View>
+      {renderContent()}
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Histórico</Text>
-            <View style={styles.list}>
-              {pagas.map((invoice) => {
-                const statusStyle = statusColors[invoice.status];
-                return (
-                  <Card key={invoice.id} style={styles.historyItem}>
-                    <View style={styles.historyInfo}>
-                      <Text style={styles.historyDescription}>{invoice.descricao}</Text>
-                      <Text style={styles.historyDate}>
-                        {invoice.pago_em ? `Pago em ${formatDateBR(invoice.pago_em)}` : formatDateBR(invoice.vencimento)}
-                      </Text>
-                    </View>
-                    <View style={styles.historyRight}>
-                      <Text style={styles.historyValue}>{formatCurrencyBRL(invoice.valor)}</Text>
-                      <Pill label={STATUS_LABEL[invoice.status]} bg={statusStyle.bg} fg={statusStyle.fg} />
-                    </View>
-                  </Card>
-                );
-              })}
-            </View>
-          </View>
-        </>
-      )}
-
-      <PaymentModal
-        invoice={invoiceInPayment}
-        onClose={() => setInvoiceInPayment(null)}
-        onPaid={handlePagamentoConcluido}
+      <CobrancaAvulsaSheet
+        visible={avulsaAberta}
+        alunos={alunos}
+        alunoInicialId={filtroAtivo === 'todos' ? null : filtroAtivo}
+        onClose={() => setAvulsaAberta(false)}
+        onCreated={(fatura, aluno) => {
+          setAvulsaAberta(false);
+          openFatura({ id: fatura.id, alunoNome: aluno.nome });
+        }}
       />
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.textPrimary,
+  header: {
+    gap: spacing.md,
   },
-  section: {
-    gap: spacing.sm,
-  },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  list: {
-    gap: spacing.sm,
-  },
-  historyItem: {
+  resumo: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  historyInfo: {
-    flex: 1,
-    marginRight: spacing.sm,
-  },
-  historyDescription: {
+  resumoLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.textPrimary,
+    color: colors.brandDark,
   },
-  historyDate: {
-    fontSize: 12,
+  resumoValor: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: colors.brandDark,
+  },
+  section: {
+    gap: spacing.sm,
+  },
+  list: {
+    gap: spacing.sm,
+  },
+  emptyHistory: {
+    fontSize: 13,
     color: colors.textSecondary,
-    marginTop: 2,
-  },
-  historyRight: {
-    alignItems: 'flex-end',
-    gap: 6,
-  },
-  historyValue: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.textPrimary,
   },
 });

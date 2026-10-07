@@ -7,3 +7,7 @@ export { ScreenContainer } from './ScreenContainer';
 export { Mascote } from './Mascote';
 export { Notice } from './Notice';
 export { TextField } from './TextField';
+export { BottomSheet } from './BottomSheet';
+export { ChipSelector } from './ChipSelector';
+export { CopyButton } from './CopyButton';
+export { ErrorState } from './ErrorState';

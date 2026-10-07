@@ -1,42 +1,38 @@
-import React, { useState } from 'react';
-import { Alert, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import * as Clipboard from 'expo-clipboard';
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
+import { Button } from '../ui/Button';
+import { CopyButton } from '../ui/CopyButton';
+import { Notice } from '../ui/Notice';
+import type { ResultadoPagamento } from '../../services/faturas';
 import { colors, radius, spacing } from '../../theme';
-import type { BoletoPaymentResult } from '../../types';
+import { openExternalUrl } from '../../utils/links';
 
-export function BoletoResult({ data }: { data: BoletoPaymentResult }) {
-  const [copied, setCopied] = useState(false);
+type BoletoData = Extract<ResultadoPagamento, { forma: 'boleto' }>;
 
-  async function handleCopy() {
-    await Clipboard.setStringAsync(data.linha_digitavel);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
-
-  async function handleOpenPdf() {
-    try {
-      await Linking.openURL(data.boleto_url);
-    } catch {
-      Alert.alert('Não foi possível abrir o boleto', 'Copie a linha digitável e pague no app do seu banco.');
-    }
+export function BoletoResult({ data }: { data: BoletoData }) {
+  if (!data.linhaDigitavel && !data.urlPdf) {
+    return <Notice message="O boleto foi gerado, mas os dados não vieram na resposta. Tente novamente em instantes." />;
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.hint}>Pague com a linha digitável no app do seu banco ou abra o PDF do boleto.</Text>
+      <Text style={styles.hint}>Pague com a linha digitável no app do seu banco ou abra o boleto em PDF.</Text>
 
-      <View style={styles.codeBox}>
-        <Text style={styles.code}>{data.linha_digitavel}</Text>
-      </View>
+      {data.linhaDigitavel ? (
+        <>
+          <View style={styles.codeBox}>
+            <Text style={styles.code} selectable>
+              {data.linhaDigitavel}
+            </Text>
+          </View>
+          <CopyButton value={data.linhaDigitavel} label="Copiar linha digitável" />
+        </>
+      ) : null}
 
-      <TouchableOpacity style={styles.copyButton} activeOpacity={0.8} onPress={handleCopy}>
-        <Text style={styles.copyButtonText}>{copied ? 'Copiado!' : 'Copiar linha digitável'}</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.outlineButton} activeOpacity={0.8} onPress={handleOpenPdf}>
-        <Text style={styles.outlineButtonText}>Abrir boleto em PDF</Text>
-      </TouchableOpacity>
+      {data.urlPdf ? (
+        <Button title="Abrir boleto em PDF" variant="outline" onPress={() => openExternalUrl(data.urlPdf ?? '')} />
+      ) : null}
     </View>
   );
 }
@@ -58,32 +54,9 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
   },
   code: {
-    fontSize: 13,
+    fontSize: 14,
     color: colors.textPrimary,
     fontVariant: ['tabular-nums'],
-  },
-  copyButton: {
-    borderRadius: radius.pill,
-    paddingVertical: spacing.md - 2,
-    alignItems: 'center',
-    backgroundColor: colors.brand,
-  },
-  copyButtonText: {
-    color: colors.onBrand,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  outlineButton: {
-    borderRadius: radius.pill,
-    paddingVertical: spacing.md - 2,
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-    borderWidth: 1.5,
-    borderColor: colors.brand,
-  },
-  outlineButtonText: {
-    color: colors.brandDark,
-    fontSize: 16,
-    fontWeight: '600',
+    textAlign: 'center',
   },
 });

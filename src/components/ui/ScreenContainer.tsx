@@ -1,6 +1,6 @@
 import React from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View, ViewProps } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
 import { colors, spacing } from '../../theme';
 
@@ -8,6 +8,8 @@ interface ScreenContainerProps extends ViewProps {
   scroll?: boolean;
   refreshing?: boolean;
   onRefresh?: () => void;
+  /** Bordas com safe area. Telas com header da pilha usam []. */
+  edges?: Edge[];
 }
 
 export function ScreenContainer({
@@ -16,11 +18,12 @@ export function ScreenContainer({
   scroll = true,
   refreshing,
   onRefresh,
+  edges = ['top'],
   ...rest
 }: ScreenContainerProps) {
   if (!scroll) {
     return (
-      <SafeAreaView style={styles.safe} edges={['top']}>
+      <SafeAreaView style={styles.safe} edges={edges}>
         <View style={[styles.container, style]} {...rest}>
           {children}
         </View>
@@ -29,13 +32,13 @@ export function ScreenContainer({
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={styles.safe} edges={edges}>
       <ScrollView
         contentContainerStyle={[styles.container, style]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           onRefresh ? (
-            <RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} tintColor={colors.brand} />
+            <RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} tintColor={colors.brandDark} colors={[colors.brandDark]} />
           ) : undefined
         }
       >

@@ -6,6 +6,7 @@ import { LoadingView } from '../components/ui/LoadingView';
 import { useAuth } from '../context/AuthContext';
 import { useChildren } from '../context/ChildContext';
 import { AlterarSenhaScreen } from '../screens/AlterarSenhaScreen';
+import { FaturaDetalheScreen } from '../screens/FaturaDetalheScreen';
 import { ChildSelectorScreen } from '../screens/ChildSelectorScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { SemConexaoScreen } from '../screens/SemConexaoScreen';
@@ -46,6 +47,11 @@ export function RootNavigator() {
         ) : (
           <Stack.Group>
             <Stack.Screen name="Main" component={AuthenticatedGate} />
+            <Stack.Screen
+              name="FaturaDetalhe"
+              component={FaturaDetalheScreen}
+              options={{ headerShown: true, title: 'Fatura' }}
+            />
             <Stack.Screen
               name="AlterarSenha"
               component={AlterarSenhaScreen}
