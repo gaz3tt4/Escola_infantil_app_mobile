@@ -5,7 +5,7 @@ import { Text } from 'react-native';
 import { AgendaScreen } from '../screens/AgendaScreen';
 import { PagamentosScreen } from '../screens/PagamentosScreen';
 import { PerfilScreen } from '../screens/PerfilScreen';
-import { colors } from '../theme/colors';
+import { colors } from '../theme';
 import type { MainTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -21,7 +21,7 @@ export function MainTabs() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: colors.schoolGreenDark,
+        tabBarActiveTintColor: colors.brandDark,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
           borderTopColor: colors.border,

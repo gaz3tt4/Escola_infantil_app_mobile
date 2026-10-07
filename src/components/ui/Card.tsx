@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View, ViewProps } from 'react-native';
 
-import { colors, radius, spacing } from '../../theme/colors';
+import { colors, radius, spacing } from '../../theme';
 
 interface CardProps extends ViewProps {
   tint?: string;

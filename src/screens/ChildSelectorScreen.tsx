@@ -6,7 +6,7 @@ import { LoadingView } from '../components/ui/LoadingView';
 import { ScreenContainer } from '../components/ui/ScreenContainer';
 import { useChildren } from '../context/ChildContext';
 import { useAuth } from '../context/AuthContext';
-import { colors, spacing } from '../theme/colors';
+import { colors, spacing } from '../theme';
 
 export function ChildSelectorScreen() {
   const { children_, isLoading, selectChild } = useChildren();
@@ -68,14 +68,14 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: colors.schoolGreenSoft,
+    backgroundColor: colors.brandSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
     fontSize: 20,
     fontWeight: '700',
-    color: colors.schoolGreenDark,
+    color: colors.brandDark,
   },
   childInfo: {
     flex: 1,

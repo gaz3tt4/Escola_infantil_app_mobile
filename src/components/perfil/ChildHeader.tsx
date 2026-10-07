@@ -1,7 +1,7 @@
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
-import { colors, spacing } from '../../theme/colors';
+import { colors, spacing } from '../../theme';
 import { calculateAge } from '../../utils/format';
 import type { Child } from '../../types';
 
@@ -46,14 +46,14 @@ const styles = StyleSheet.create({
     borderRadius: 32,
   },
   avatarFallback: {
-    backgroundColor: colors.schoolGreenSoft,
+    backgroundColor: colors.brandSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarInitials: {
     fontSize: 22,
     fontWeight: '700',
-    color: colors.schoolGreenDark,
+    color: colors.brandDark,
   },
   name: {
     fontSize: 19,

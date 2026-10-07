@@ -2,7 +2,7 @@ import React from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View, ViewProps } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { colors, spacing } from '../../theme/colors';
+import { colors, spacing } from '../../theme';
 
 interface ScreenContainerProps extends ViewProps {
   scroll?: boolean;
@@ -35,7 +35,7 @@ export function ScreenContainer({
         showsVerticalScrollIndicator={false}
         refreshControl={
           onRefresh ? (
-            <RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} tintColor={colors.schoolGreen} />
+            <RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} tintColor={colors.brand} />
           ) : undefined
         }
       >

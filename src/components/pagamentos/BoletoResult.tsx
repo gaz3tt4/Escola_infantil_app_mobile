@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Alert, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 
-import { colors, radius, spacing } from '../../theme/colors';
+import { colors, radius, spacing } from '../../theme';
 import type { BoletoPaymentResult } from '../../types';
 
 export function BoletoResult({ data }: { data: BoletoPaymentResult }) {
@@ -66,10 +66,10 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     paddingVertical: spacing.md - 2,
     alignItems: 'center',
-    backgroundColor: colors.schoolGreen,
+    backgroundColor: colors.brand,
   },
   copyButtonText: {
-    color: '#fff',
+    color: colors.onBrand,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -79,10 +79,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'transparent',
     borderWidth: 1.5,
-    borderColor: colors.schoolGreen,
+    borderColor: colors.brand,
   },
   outlineButtonText: {
-    color: colors.schoolGreenDark,
+    color: colors.brandDark,
     fontSize: 16,
     fontWeight: '600',
   },

@@ -6,7 +6,7 @@ import { CreditCardForm } from './CreditCardForm';
 import { PaymentMethodPicker } from './PaymentMethodPicker';
 import { PixResult } from './PixResult';
 import { payInvoice } from '../../api/payments';
-import { colors, radius, spacing } from '../../theme/colors';
+import { colors, radius, spacing } from '../../theme';
 import { formatCurrencyBRL } from '../../utils/format';
 import type { CardPaymentPayload, Invoice, PagamentoResponse, PaymentMethod } from '../../types';
 
@@ -90,7 +90,7 @@ export function PaymentModal({ invoice, onClose, onPaid }: PaymentModalProps) {
               {error ? <Text style={styles.error}>{error}</Text> : null}
               {submitting ? (
                 <View style={styles.loading}>
-                  <ActivityIndicator color={colors.schoolGreen} size="large" />
+                  <ActivityIndicator color={colors.brand} size="large" />
                   <Text style={styles.loadingLabel}>Gerando pagamento...</Text>
                 </View>
               ) : (

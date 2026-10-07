@@ -9,7 +9,7 @@ import { EmptyState } from '../components/ui/EmptyState';
 import { LoadingView } from '../components/ui/LoadingView';
 import { ScreenContainer } from '../components/ui/ScreenContainer';
 import { useChildren } from '../context/ChildContext';
-import { colors, radius, spacing } from '../theme/colors';
+import { colors, radius, spacing } from '../theme';
 import { addDaysISO, formatDateLong, todayISO } from '../utils/format';
 import type { DailyReport, Reminder } from '../types';
 
@@ -111,13 +111,13 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.schoolGreenSoft,
+    backgroundColor: colors.brandSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
   dateButtonText: {
     fontSize: 18,
-    color: colors.schoolGreenDark,
+    color: colors.brandDark,
     fontWeight: '700',
   },
   dateLabel: {

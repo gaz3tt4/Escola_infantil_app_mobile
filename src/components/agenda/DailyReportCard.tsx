@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { alimentacaoLabels, higieneLabels, humorEmojis, humorLabels, sonoLabels } from './labels';
 import { Card } from '../ui/Card';
-import { colors, spacing } from '../../theme/colors';
+import { colors, spacing } from '../../theme';
 import type { DailyReport } from '../../types';
 
 function InfoRow({ icon, label, value }: { icon: string; label: string; value: string }) {
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontSize: 12,
-    color: colors.schoolGreenDark,
+    color: colors.brandDark,
     fontWeight: '600',
   },
   observacoes: {

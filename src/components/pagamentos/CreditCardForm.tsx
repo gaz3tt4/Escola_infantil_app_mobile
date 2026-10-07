@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Button } from '../ui/Button';
-import { colors, radius, spacing } from '../../theme/colors';
+import { colors, radius, spacing } from '../../theme';
 import {
   formatCardNumber,
   formatCVV,

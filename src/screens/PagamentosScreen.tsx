@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { getInvoices } from '../api/payments';
-import { InvoiceAccordionCard } from '../components/pagamentos/InvoiceAccordionCard';
+import { InvoiceAccordionCard, statusColors } from '../components/pagamentos/InvoiceAccordionCard';
 import { PaymentModal } from '../components/pagamentos/PaymentModal';
 import { Card } from '../components/ui/Card';
 import { EmptyState } from '../components/ui/EmptyState';
@@ -10,7 +10,7 @@ import { LoadingView } from '../components/ui/LoadingView';
 import { Pill } from '../components/ui/Pill';
 import { ScreenContainer } from '../components/ui/ScreenContainer';
 import { useChildren } from '../context/ChildContext';
-import { colors, spacing, statusColors } from '../theme/colors';
+import { colors, spacing } from '../theme';
 import { formatCurrencyBRL, formatDateBR } from '../utils/format';
 import type { Invoice, InvoiceStatus } from '../types';
 

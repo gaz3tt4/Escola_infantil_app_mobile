@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Card } from '../ui/Card';
-import { colors, spacing } from '../../theme/colors';
+import { colors, spacing } from '../../theme';
 import { formatDateBR } from '../../utils/format';
 import type { Recado } from '../../types';
 

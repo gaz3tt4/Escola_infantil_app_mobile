@@ -11,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../context/AuthContext';
-import { colors, radius, spacing } from '../theme/colors';
+import { colors, radius, spacing } from '../theme';
 
 export function LoginScreen() {
   const { login, isLoggingIn } = useAuth();
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '800',
-    color: colors.schoolGreenDark,
+    color: colors.brandDark,
   },
   subtitle: {
     fontSize: 14,

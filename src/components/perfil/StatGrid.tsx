@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors, radius, spacing } from '../../theme/colors';
+import { colors, radius, spacing } from '../../theme';
 import type { ChildProfile } from '../../types';
 
 interface StatItem {

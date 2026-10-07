@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 
-import { colors, radius, spacing } from '../../theme/colors';
+import { colors, radius, spacing } from '../../theme';
 
 interface ButtonProps {
   title: string;
@@ -34,12 +34,12 @@ export function Button({ title, onPress, variant = 'primary', loading, disabled 
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'outline' ? colors.schoolGreen : '#fff'} />
+        <ActivityIndicator color={variant === 'outline' ? colors.brandDark : colors.onBrand} />
       ) : (
         <Text
           style={[
             styles.text,
-            variant === 'outline' && { color: colors.schoolGreenDark },
+            variant === 'outline' && { color: colors.brandDark },
             variant === 'secondary' && { color: colors.textPrimary },
           ]}
         >
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   primary: {
-    backgroundColor: colors.schoolGreen,
+    backgroundColor: colors.brand,
   },
   secondary: {
     backgroundColor: colors.sunnySoft,
@@ -67,13 +67,13 @@ const styles = StyleSheet.create({
   outline: {
     backgroundColor: 'transparent',
     borderWidth: 1.5,
-    borderColor: colors.schoolGreen,
+    borderColor: colors.brand,
   },
   disabled: {
     opacity: 0.6,
   },
   text: {
-    color: '#fff',
+    color: colors.onBrand,
     fontSize: 16,
     fontWeight: '600',
   },

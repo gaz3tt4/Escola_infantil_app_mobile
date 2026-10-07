@@ -1,12 +1,12 @@
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
-import { colors, spacing } from '../../theme/colors';
+import { colors, spacing } from '../../theme';
 
 export function LoadingView({ label }: { label?: string }) {
   return (
     <View style={styles.container}>
-      <ActivityIndicator color={colors.schoolGreen} size="large" />
+      <ActivityIndicator color={colors.brand} size="large" />
       {label ? <Text style={styles.label}>{label}</Text> : null}
     </View>
   );

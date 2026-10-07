@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 
-import { colors, radius, spacing } from '../../theme/colors';
+import { colors, radius, spacing } from '../../theme';
 import type { PixPaymentResult } from '../../types';
 
 export function PixResult({ data }: { data: PixPaymentResult }) {
@@ -80,10 +80,10 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     paddingVertical: spacing.md - 2,
     alignItems: 'center',
-    backgroundColor: colors.schoolGreen,
+    backgroundColor: colors.brand,
   },
   copyButtonText: {
-    color: '#fff',
+    color: colors.onBrand,
     fontSize: 16,
     fontWeight: '600',
   },

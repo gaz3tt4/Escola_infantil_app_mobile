@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { radius, spacing } from '../../theme/colors';
+import { radius, spacing } from '../../theme';
 
 export function Pill({ label, bg, fg }: { label: string; bg: string; fg: string }) {
   return (

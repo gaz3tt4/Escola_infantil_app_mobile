@@ -4,9 +4,16 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Pill } from '../ui/Pill';
-import { colors, spacing, statusColors } from '../../theme/colors';
+import { colors, spacing } from '../../theme';
 import { formatCurrencyBRL, formatDateBR } from '../../utils/format';
 import type { Invoice, InvoiceStatus } from '../../types';
+
+// Provisório até a tela de Pagamentos usar o FaturaResource.
+export const statusColors: Record<InvoiceStatus, { bg: string; fg: string }> = {
+  pago: { bg: colors.brandSoft, fg: colors.brandDark },
+  pendente: { bg: colors.sunnySoft, fg: colors.warning },
+  atrasado: { bg: colors.coralSoft, fg: colors.danger },
+};
 
 const STATUS_LABEL: Record<InvoiceStatus, string> = {
   pago: 'Pago',
@@ -147,7 +154,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   discount: {
-    color: colors.schoolGreenDark,
+    color: colors.brandDark,
   },
   totalRow: {
     marginTop: 4,
@@ -163,7 +170,7 @@ const styles = StyleSheet.create({
   totalValue: {
     fontSize: 16,
     fontWeight: '800',
-    color: colors.schoolGreenDark,
+    color: colors.brandDark,
   },
   payButton: {
     marginTop: spacing.sm,

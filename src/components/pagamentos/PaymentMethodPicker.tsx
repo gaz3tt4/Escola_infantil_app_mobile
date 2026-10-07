@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { colors, radius, spacing } from '../../theme/colors';
+import { colors, radius, spacing } from '../../theme';
 import type { PaymentMethod } from '../../types';
 
 const OPTIONS: { method: PaymentMethod; icon: string; label: string; description: string }[] = [
