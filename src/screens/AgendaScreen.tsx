@@ -1,25 +1,42 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { AlunoSwitcher, useAlunosGate } from '../components/AlunoSwitcher';
 import { AgendaDoDia, agendaVazia } from '../components/agenda/AgendaDoDia';
-import { RemindersList } from '../components/agenda/RemindersList';
+import { AvisosList } from '../components/agenda/AvisosList';
+import { CienciaBarra, CienciaSheet } from '../components/agenda/CienciaSheet';
+import { Button } from '../components/ui/Button';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { LoadingView } from '../components/ui/LoadingView';
 import { Mascote } from '../components/ui/Mascote';
+import { Notice } from '../components/ui/Notice';
 import { ScreenContainer } from '../components/ui/ScreenContainer';
 import { useAlunos } from '../context/AlunosContext';
 import { useAsyncResource } from '../hooks/useAsyncResource';
+import { useConfirmarCiencia } from '../hooks/useConfirmarCiencia';
+import { useFimDaPagina } from '../hooks/useFimDaPagina';
+import { clearAgendaTarget, useAgendaTarget, type AgendaTarget } from '../notifications/agendaTarget';
 import { obterAgenda } from '../services/agenda';
-import { listarLembretes } from '../services/lembretes';
+import { listarAvisos } from '../services/avisos';
 import type { Aluno } from '../services/types';
 import { colors, radius, spacing, typography } from '../theme';
 import { addDaysISO, firstName, formatDateLong, todayISO } from '../utils/format';
 
 export function AgendaScreen() {
-  const { selectedAluno } = useAlunos();
+  const { alunos, selectedAluno, selectAluno } = useAlunos();
   const gate = useAlunosGate();
+  const alvo = useAgendaTarget();
+
+  // Toque na notificação: foca o aluno do aviso; a data é aplicada por AgendaDoAluno.
+  useEffect(() => {
+    if (!alvo) return;
+    if (alunos.some((aluno) => aluno.id === alvo.alunoId)) {
+      selectAluno(alvo.alunoId);
+    } else if (alunos.length > 0) {
+      clearAgendaTarget();
+    }
+  }, [alvo, alunos, selectAluno]);
 
   return gate || !selectedAluno ? (
     <ScreenContainer>
@@ -32,25 +49,61 @@ export function AgendaScreen() {
 }
 
 function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
-  const [date, setDate] = useState(todayISO);
+  const alvo = useAgendaTarget();
+  const [date, setDate] = useState(() => (alvo && alvo.alunoId === aluno.id ? alvo.data : todayISO()));
   const isToday = date === todayISO();
+
+  // Data do push: aplicada durante a renderização (uma vez por destino) e depois liberada.
+  const [aplicado, setAplicado] = useState<AgendaTarget | null>(null);
+  if (alvo && alvo !== aplicado && alvo.alunoId === aluno.id) {
+    setAplicado(alvo);
+    setDate(alvo.data);
+  }
+  useEffect(() => {
+    if (alvo && alvo.alunoId === aluno.id) clearAgendaTarget();
+  }, [alvo, aluno.id]);
 
   const loader = useCallback(
     () =>
-      Promise.all([obterAgenda(aluno.id, date), listarLembretes()]).then(([agenda, lembretes]) => ({
-        agenda,
-        lembretes,
-      })),
+      Promise.all([
+        obterAgenda(aluno.id, date),
+        // Falha nos avisos não derruba a agenda.
+        listarAvisos(aluno.id, date).catch(() => []),
+      ]).then(([agenda, avisos]) => ({ agenda, avisos })),
     [aluno.id, date]
   );
   const { data, error, isLoading, isRefreshing, reload } = useAsyncResource(loader);
 
+  // Ciência: pop-up ao chegar ao fim; agenda curta (cabe sem rolar) usa a barra fixa.
+  const fim = useFimDaPagina();
+  const [confirmadas, setConfirmadas] = useState<ReadonlySet<number>>(new Set());
+  const [dispensada, setDispensada] = useState<number | null>(null);
+  const onConfirmada = useCallback((agendaId: number) => {
+    setConfirmadas((atual) => new Set(atual).add(agendaId));
+  }, []);
+  const ciencia = useConfirmarCiencia(onConfirmada);
+
+  const agenda = data?.agenda ?? null;
+  const pendente = agenda !== null && !agenda.ciente && !confirmadas.has(agenda.id);
+  const cienteAgora = agenda !== null && (agenda.ciente || confirmadas.has(agenda.id));
+  const sheetAberto = pendente && fim.chegouAoFim && dispensada !== agenda.id;
+  const confirmar = () => {
+    if (agenda) void ciencia.confirmar(agenda.id);
+  };
+
   return (
-    <ScreenContainer refreshing={isRefreshing} onRefresh={reload}>
+    <ScreenContainer
+      refreshing={isRefreshing}
+      onRefresh={reload}
+      scrollProps={fim.scrollProps}
+      footer={
+        pendente && fim.cabeNaTela ? (
+          <CienciaBarra loading={ciencia.loading} error={ciencia.error} onConfirm={confirmar} />
+        ) : null
+      }
+    >
       <View style={styles.header}>
-        <View style={styles.titleRow}>
-          <Text style={typography.title}>Agenda de {firstName(aluno.nome)}</Text>
-        </View>
+        <Text style={typography.title}>Agenda de {firstName(aluno.nome)}</Text>
         <AlunoSwitcher />
         <View style={styles.dateNav}>
           <TouchableOpacity
@@ -78,37 +131,48 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
       {error ? <ErrorState message={error} onRetry={reload} /> : null}
       {data ? (
         <>
-          {data.agenda && !agendaVazia(data.agenda) ? (
-            <AgendaDoDia agenda={data.agenda} />
+          {cienteAgora ? <Notice tone="success" message="Ciência confirmada. Obrigado!" /> : null}
+          {agenda && !agendaVazia(agenda) ? (
+            <AgendaDoDia agenda={agenda} />
           ) : (
             <View style={styles.vazio}>
               <Mascote size={30} segments={3} />
               <EmptyState
                 icon="📭"
-                title={data.agenda ? 'Agenda sem registros' : 'Sem agenda neste dia'}
+                title={agenda ? 'Agenda sem registros' : 'Sem agenda neste dia'}
                 description={
-                  data.agenda
+                  agenda
                     ? 'A professora ainda não registrou nada nesta agenda.'
                     : 'A professora ainda não lançou a agenda para essa data.'
                 }
               />
             </View>
           )}
-          <RemindersList reminders={data.lembretes} />
+          <AvisosList avisos={data.avisos} />
+          {/* Fallback para quem dispensou o pop-up (agenda longa); a curta usa a barra fixa. */}
+          {pendente && !fim.cabeNaTela ? (
+            <Button title="Confirmar ciência" onPress={confirmar} loading={ciencia.loading} />
+          ) : null}
+          {pendente && !fim.cabeNaTela && ciencia.error && !sheetAberto ? <Notice message={ciencia.error} /> : null}
         </>
       ) : null}
+
+      <CienciaSheet
+        visible={sheetAberto}
+        loading={ciencia.loading}
+        error={ciencia.error}
+        onConfirm={confirmar}
+        onClose={() => {
+          ciencia.limparErro();
+          if (agenda) setDispensada(agenda.id);
+        }}
+      />
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
   header: {
-    gap: spacing.sm,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     gap: spacing.sm,
   },
   vazio: {

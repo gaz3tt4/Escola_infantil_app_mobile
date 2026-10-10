@@ -4,12 +4,10 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { AlunoSwitcher, useAlunosGate } from '../components/AlunoSwitcher';
 import { ChildHeader } from '../components/perfil/ChildHeader';
-import { RecadoCard } from '../components/perfil/RecadoCard';
 import { StatGrid } from '../components/perfil/StatGrid';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { DemoBadge } from '../components/ui/DemoBadge';
-import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { LoadingView } from '../components/ui/LoadingView';
 import { Mascote } from '../components/ui/Mascote';
@@ -19,7 +17,7 @@ import { useAuth } from '../context/AuthContext';
 import { useAsyncResource } from '../hooks/useAsyncResource';
 import { obterMatriculaAtiva, PERIODO_LABEL } from '../services/alunos';
 import { getMe } from '../services/auth';
-import { listarRecados, obterResumoDoAluno } from '../services/perfil';
+import { obterResumoDoAluno } from '../services/perfil';
 import type { Aluno, Responsavel } from '../services/types';
 import { colors, spacing, typography } from '../theme';
 import { firstName, formatCPF, formatCurrencyBRL, formatDateBR, formatTelefone } from '../utils/format';
@@ -108,13 +106,14 @@ function ResponsavelCard({
   );
 }
 
-/** Dados do aluno em foco: matrícula (API real) + resumo e recados (mock). */
+/** Dados do aluno em foco: matrícula (API real) + resumo do mês (mock; os recados têm aba própria). */
 function AlunoSection({ aluno }: { aluno: Aluno }) {
   const loader = useCallback(
     () =>
-      Promise.all([obterMatriculaAtiva(aluno.id), obterResumoDoAluno(aluno.id), listarRecados(aluno.id)]).then(
-        ([matricula, resumo, recados]) => ({ matricula, resumo, recados })
-      ),
+      Promise.all([obterMatriculaAtiva(aluno.id), obterResumoDoAluno(aluno.id)]).then(([matricula, resumo]) => ({
+        matricula,
+        resumo,
+      })),
     [aluno.id]
   );
   const { data, error, isLoading, reload } = useAsyncResource(loader);
@@ -147,21 +146,7 @@ function AlunoSection({ aluno }: { aluno: Aluno }) {
             <Text style={typography.sectionTitle}>Resumo do mês</Text>
             <DemoBadge />
           </View>
-          <StatGrid resumo={data.resumo} recados={data.recados.length} />
-
-          <View style={styles.sectionHeader}>
-            <Text style={typography.sectionTitle}>Recados</Text>
-            <DemoBadge />
-          </View>
-          {data.recados.length === 0 ? (
-            <EmptyState icon="💌" title="Nenhum recado por aqui" description="Quando a escola enviar um recado, ele aparece nesta lista." />
-          ) : (
-            <View style={styles.list}>
-              {data.recados.map((recado) => (
-                <RecadoCard key={recado.id} recado={recado} />
-              ))}
-            </View>
-          )}
+          <StatGrid resumo={data.resumo} />
         </>
       ) : null}
     </>

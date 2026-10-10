@@ -186,6 +186,68 @@ export interface Agenda {
   ciente_em: string | null;
 }
 
+// ---------- Ciência ----------
+
+/** POST /agendas/{agenda}/ciencia (idempotente: repetir devolve a primeira data). */
+export interface CienciaResponse {
+  ciente: true;
+  ciente_em: string;
+}
+
+/** Item de GET /agendas/pendentes: agendas dos seus filhos sem a sua ciência. */
+export interface AgendaPendente {
+  agenda_id: number;
+  aluno_id: number;
+  data: string; // Y-m-d
+}
+
+// ---------- Push ----------
+
+export type PlataformaPush = 'ios' | 'android';
+
+export interface DispositivoPushRequest {
+  token: string;
+  plataforma: PlataformaPush;
+}
+
+// ---------- Avisos ----------
+
+/** GET /alunos/{id}/avisos. `data_fim` nulo = aviso de um dia só. */
+export interface Aviso {
+  id: number;
+  titulo: string;
+  texto: string;
+  data: string; // Y-m-d
+  data_fim: string | null;
+  autor: { nome: string; papel: string };
+}
+
+// ---------- Recados ----------
+
+/** `tipo` só tem `atividades` e `recado`; o app trata como texto. */
+export interface Recado {
+  id: number;
+  tipo: string;
+  texto: string;
+  data: string; // Y-m-d
+  autor: { nome: string; papel: 'professor' | 'admin' | 'responsavel' | string };
+  aluno_id: number | null;
+}
+
+// ---------- Medicamentos ----------
+
+export interface Medicamento {
+  id: number;
+  nome: string;
+  dose: string;
+  horario: string; // HH:mm
+  data_administracao: string; // Y-m-d
+  administrado: boolean;
+  administrado_em: string | null; // ISO 8601
+  /** Só o nome do professor, ou null. */
+  administrado_por: string | null;
+}
+
 // ---------- Envelopes ----------
 
 /** Envelope `{ data: ... }` dos API Resources do Laravel. */

@@ -12,7 +12,7 @@ interface StatItem {
   fg: string;
 }
 
-export function StatGrid({ resumo, recados }: { resumo: ResumoAluno; recados: number }) {
+export function StatGrid({ resumo }: { resumo: ResumoAluno }) {
   const items: StatItem[] = [
     { icon: '📅', label: 'Faltas', value: String(resumo.faltas), bg: colors.coralSoft, fg: colors.danger },
     { icon: '🎨', label: 'Atividades', value: String(resumo.atividades), bg: colors.skySoft, fg: '#1E6FA8' },
@@ -23,7 +23,6 @@ export function StatGrid({ resumo, recados }: { resumo: ResumoAluno; recados: nu
       bg: colors.lavenderSoft,
       fg: '#5B4FBF',
     },
-    { icon: '💌', label: 'Recados', value: String(recados), bg: colors.sunnySoft, fg: colors.warning },
   ];
 
   return (

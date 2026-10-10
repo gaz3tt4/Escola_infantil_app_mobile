@@ -1,5 +1,5 @@
 import React from 'react';
-import { RefreshControl, ScrollView, StyleSheet, View, ViewProps } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, View, type ScrollViewProps, type ViewProps } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
 import { colors, spacing } from '../../theme';
@@ -10,6 +10,10 @@ interface ScreenContainerProps extends ViewProps {
   onRefresh?: () => void;
   /** Bordas com safe area. Telas com header da pilha usam []. */
   edges?: Edge[];
+  /** Props extras do ScrollView (ex.: medir a rolagem). */
+  scrollProps?: ScrollViewProps;
+  /** Rodapé fixo abaixo da área rolável (ex.: botão de ciência). */
+  footer?: React.ReactNode;
 }
 
 export function ScreenContainer({
@@ -19,6 +23,8 @@ export function ScreenContainer({
   refreshing,
   onRefresh,
   edges = ['top'],
+  scrollProps,
+  footer,
   ...rest
 }: ScreenContainerProps) {
   if (!scroll) {
@@ -34,6 +40,7 @@ export function ScreenContainer({
   return (
     <SafeAreaView style={styles.safe} edges={edges}>
       <ScrollView
+        {...scrollProps}
         contentContainerStyle={[styles.container, style]}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -44,6 +51,7 @@ export function ScreenContainer({
       >
         {children}
       </ScrollView>
+      {footer}
     </SafeAreaView>
   );
 }

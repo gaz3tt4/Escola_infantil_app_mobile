@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as authService from '../services/auth';
+import { registrarDispositivoPush, removerDispositivoPush } from '../services/push';
 import { toApiError } from '../services/errors';
 import { setSessionEndedHandler } from '../services/http';
 import { getMustChangePassword, getToken } from '../services/session';
@@ -84,6 +85,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [bootAttempt]);
 
+  // Registra o token de push em toda entrada na área logada (login, sessão salva e depois da
+  // troca obrigatória de senha). Falhas são silenciosas: push é um extra.
+  useEffect(() => {
+    if (status === 'signedIn' && !mustChangePassword) {
+      void registrarDispositivoPush();
+    }
+  }, [status, mustChangePassword]);
+
   const retryBootstrap = useCallback(() => {
     setStatus('bootstrapping');
     setBootAttempt((attempt) => attempt + 1);
@@ -99,6 +108,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(async () => {
     loggingOut.current = true;
     try {
+      // Antes do logout: a rota de dispositivos exige o Bearer.
+      await removerDispositivoPush();
       await authService.logout();
     } finally {
       loggingOut.current = false;

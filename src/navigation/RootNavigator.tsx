@@ -5,12 +5,15 @@ import React from 'react';
 import { LoadingView } from '../components/ui/LoadingView';
 import { AlunosProvider } from '../context/AlunosContext';
 import { useAuth } from '../context/AuthContext';
+import { PendenciasProvider } from '../context/PendenciasContext';
+import { NotificationsBridge } from '../notifications/NotificationsBridge';
 import { AlterarSenhaScreen } from '../screens/AlterarSenhaScreen';
 import { FaturaDetalheScreen } from '../screens/FaturaDetalheScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { SemConexaoScreen } from '../screens/SemConexaoScreen';
 import { colors } from '../theme';
 import { MainTabs } from './MainTabs';
+import { navigationRef } from './ref';
 import type { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -27,7 +30,8 @@ export function RootNavigator() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
+      <NotificationsBridge />
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
@@ -67,7 +71,9 @@ export function RootNavigator() {
 function AppHome() {
   return (
     <AlunosProvider>
-      <MainTabs />
+      <PendenciasProvider>
+        <MainTabs />
+      </PendenciasProvider>
     </AlunosProvider>
   );
 }

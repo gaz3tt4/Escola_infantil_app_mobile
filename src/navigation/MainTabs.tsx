@@ -5,6 +5,8 @@ import { Text } from 'react-native';
 import { AgendaScreen } from '../screens/AgendaScreen';
 import { PagamentosScreen } from '../screens/PagamentosScreen';
 import { PerfilScreen } from '../screens/PerfilScreen';
+import { RecadosScreen } from '../screens/RecadosScreen';
+import { usePendencias } from '../context/PendenciasContext';
 import { colors } from '../theme';
 import type { MainTabParamList } from './types';
 
@@ -12,11 +14,14 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 const TAB_ICONS: Record<keyof MainTabParamList, string> = {
   Agenda: '🗓️',
+  Recados: '💌',
   Perfil: '🧒',
   Pagamentos: '💳',
 };
 
 export function MainTabs() {
+  const { pendentes } = usePendencias();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -38,7 +43,16 @@ export function MainTabs() {
         ),
       })}
     >
-      <Tab.Screen name="Agenda" component={AgendaScreen} />
+      <Tab.Screen
+        name="Agenda"
+        component={AgendaScreen}
+        options={{
+          // Indicador de agendas sem a sua ciência.
+          tabBarBadge: pendentes.length > 0 ? pendentes.length : undefined,
+          tabBarBadgeStyle: { backgroundColor: colors.coral, color: colors.surface },
+        }}
+      />
+      <Tab.Screen name="Recados" component={RecadosScreen} />
       <Tab.Screen name="Perfil" component={PerfilScreen} />
       <Tab.Screen name="Pagamentos" component={PagamentosScreen} />
     </Tab.Navigator>
