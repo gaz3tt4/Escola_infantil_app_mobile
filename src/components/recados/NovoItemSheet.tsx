@@ -9,10 +9,10 @@ import { Notice } from '../ui/Notice';
 import { TextField } from '../ui/TextField';
 import { toApiError } from '../../services/errors';
 import { atualizarMedicamento, criarMedicamento, type ArquivoReceita } from '../../services/medicamentos';
-import { enviarRecado, TEXTO_RECADO_MAX } from '../../services/recados';
-import type { Aluno, Medicamento } from '../../services/types';
+import { editarRecado, enviarRecado, TEXTO_RECADO_MAX } from '../../services/recados';
+import type { Aluno, Medicamento, Recado } from '../../services/types';
 import { colors } from '../../theme';
-import { formatDateBR, maskDateBR, parseDateBR, todayISO } from '../../utils/format';
+import { formatDateBR, formatDateTimeBR, maskDateBR, parseDateBR, todayISO } from '../../utils/format';
 
 type Aba = 'recado' | 'medicamento';
 
@@ -21,6 +21,8 @@ interface NovoItemSheetProps {
   aluno: Aluno;
   /** Medicamento em edição; use `key` para reiniciar o formulário ao trocar. */
   medicamento?: Medicamento | null;
+  /** Recado em edição (dentro do prazo); use `key` para reiniciar o formulário. */
+  recado?: Recado | null;
   onClose: () => void;
   /** Chamado depois de enviar com sucesso (para recarregar as listas). */
   onSent: () => void;
@@ -40,13 +42,14 @@ function hoje(): string {
 }
 
 /** Bottom sheet com duas abas: recado ao professor e medicamento (com receita obrigatória). */
-export function NovoItemSheet({ visible, aluno, medicamento, onClose, onSent }: NovoItemSheetProps) {
+export function NovoItemSheet({ visible, aluno, medicamento, recado, onClose, onSent }: NovoItemSheetProps) {
   const edicao = medicamento ?? null;
+  const recadoEdicao = recado ?? null;
   const [aba, setAba] = useState<Aba>(edicao ? 'medicamento' : 'recado');
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const [texto, setTexto] = useState('');
+  const [texto, setTexto] = useState(recadoEdicao?.texto ?? '');
   const [erroTexto, setErroTexto] = useState<string | null>(null);
 
   const [nome, setNome] = useState(edicao?.nome ?? '');
@@ -83,7 +86,11 @@ export function NovoItemSheet({ visible, aluno, medicamento, onClose, onSent }: 
     setFormError(null);
     setSubmitting(true);
     try {
-      await enviarRecado(aluno.id, limpo);
+      if (recadoEdicao) {
+        await editarRecado(recadoEdicao.id, limpo);
+      } else {
+        await enviarRecado(aluno.id, limpo);
+      }
       resetar();
       onSent();
     } catch (error) {
@@ -140,11 +147,19 @@ export function NovoItemSheet({ visible, aluno, medicamento, onClose, onSent }: 
   return (
     <BottomSheet
       visible={visible}
-      title={edicao ? 'Editar medicamento' : 'Enviar à escola'}
-      subtitle={edicao ? 'Só é possível alterar no dia da administração, antes de administrado' : `Para a turma de ${aluno.nome.split(' ')[0]}`}
+      title={edicao ? 'Editar medicamento' : recadoEdicao ? 'Editar recado' : 'Enviar à escola'}
+      subtitle={
+        edicao
+          ? 'Só é possível alterar no dia da administração, antes de administrado'
+          : recadoEdicao
+            ? recadoEdicao.editavel_ate
+              ? `Você pode alterar até ${formatDateTimeBR(recadoEdicao.editavel_ate)}`
+              : undefined
+            : `Para a turma de ${aluno.nome.split(' ')[0]}`
+      }
       onClose={fechar}
     >
-      {edicao ? null : (
+      {edicao || recadoEdicao ? null : (
       <ChipSelector<Aba>
         scroll={false}
         options={[
@@ -176,7 +191,7 @@ export function NovoItemSheet({ visible, aluno, medicamento, onClose, onSent }: 
             {texto.length}/{TEXTO_RECADO_MAX}
           </Text>
           {formError ? <Notice message={formError} /> : null}
-          <Button title="Enviar recado" onPress={enviarTexto} loading={submitting} />
+          <Button title={recadoEdicao ? 'Salvar alterações' : 'Enviar recado'} onPress={enviarTexto} loading={submitting} />
         </>
       ) : (
         <>

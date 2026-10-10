@@ -1,5 +1,5 @@
 import { http } from './http';
-import type { DataEnvelope, Recado } from './types';
+import type { DataEnvelope, MessageResponse, Recado } from './types';
 
 export const TEXTO_RECADO_MAX = 2000;
 
@@ -17,4 +17,23 @@ export async function listarRecados(alunoId: number): Promise<Recado[]> {
 export async function enviarRecado(alunoId: number, texto: string): Promise<Recado> {
   const { data } = await http.post<DataEnvelope<Recado>>(`/alunos/${alunoId}/recados`, { texto });
   return data.data;
+}
+
+/** PUT /recados/{id}: só recado seu e dentro do prazo (`editavel_ate`). */
+export async function editarRecado(recadoId: number, texto: string): Promise<Recado> {
+  const { data } = await http.put<DataEnvelope<Recado>>(`/recados/${recadoId}`, { texto });
+  return data.data;
+}
+
+/** DELETE /recados/{id}: só recado seu e dentro do prazo. */
+export async function apagarRecado(recadoId: number): Promise<string> {
+  const { data } = await http.delete<MessageResponse>(`/recados/${recadoId}`);
+  return data.message;
+}
+
+/** Ainda dá para alterar? O prazo vem do backend (manhã/integral até 07h, tarde até 12h do dia seguinte). */
+export function recadoEditavel(recado: Recado, agora: number = Date.now()): boolean {
+  if (recado.autor.papel !== 'responsavel' || !recado.editavel_ate) return false;
+  const limite = Date.parse(recado.editavel_ate);
+  return Number.isFinite(limite) && limite > agora;
 }

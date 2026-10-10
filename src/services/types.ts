@@ -234,6 +234,8 @@ export interface Recado {
   data: string; // Y-m-d
   autor: { nome: string; papel: 'professor' | 'admin' | 'responsavel' | string };
   aluno_id: number | null;
+  /** ISO 8601 (-03:00) até quando o responsável pode alterar o próprio recado; null nos demais. */
+  editavel_ate?: string | null;
 }
 
 // ---------- Medicamentos ----------

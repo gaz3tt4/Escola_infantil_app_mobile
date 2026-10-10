@@ -16,8 +16,8 @@ import { useAlunos } from '../context/AlunosContext';
 import { useAsyncResource } from '../hooks/useAsyncResource';
 import { toApiError } from '../services/errors';
 import { apagarMedicamento, listarMedicamentos } from '../services/medicamentos';
-import { listarRecados } from '../services/recados';
-import type { Aluno, Medicamento } from '../services/types';
+import { apagarRecado, listarRecados } from '../services/recados';
+import type { Aluno, Medicamento, Recado } from '../services/types';
 import { colors, spacing, typography } from '../theme';
 import { firstName } from '../utils/format';
 
@@ -47,8 +47,32 @@ function RecadosDoAluno({ aluno }: { aluno: Aluno }) {
   const { data, error, isLoading, isRefreshing, reload } = useAsyncResource(loader);
   const [sheetAberto, setSheetAberto] = useState(false);
   const [emEdicao, setEmEdicao] = useState<Medicamento | null>(null);
+  const [recadoEmEdicao, setRecadoEmEdicao] = useState<Recado | null>(null);
   const [apagando, setApagando] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
+
+  function confirmarExclusaoRecado(recado: Recado) {
+    Alert.alert('Apagar recado?', 'O recado será removido e o professor deixará de vê-lo.', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Apagar',
+        style: 'destructive',
+        onPress: async () => {
+          setApagando(true);
+          setAviso(null);
+          try {
+            await apagarRecado(recado.id);
+          } catch (error) {
+            // 403 (não é seu) ou 422 (passou do prazo): a mensagem vem do backend.
+            setAviso(toApiError(error).message);
+          } finally {
+            setApagando(false);
+            reload();
+          }
+        },
+      },
+    ]);
+  }
 
   function confirmarExclusao(medicamento: Medicamento) {
     Alert.alert('Apagar medicamento?', `${medicamento.nome} e a receita enviada serão removidos.`, [
@@ -86,6 +110,7 @@ function RecadosDoAluno({ aluno }: { aluno: Aluno }) {
           onPress={() => {
             setAviso(null);
             setEmEdicao(null);
+            setRecadoEmEdicao(null);
             setSheetAberto(true);
           }}
         />
@@ -109,6 +134,7 @@ function RecadosDoAluno({ aluno }: { aluno: Aluno }) {
                     busy={apagando}
                     onEdit={(item) => {
                       setAviso(null);
+                      setRecadoEmEdicao(null);
                       setEmEdicao(item);
                       setSheetAberto(true);
                     }}
@@ -126,7 +152,18 @@ function RecadosDoAluno({ aluno }: { aluno: Aluno }) {
             ) : (
               <View style={styles.list}>
                 {data.recados.map((recado) => (
-                  <RecadoItem key={recado.id} recado={recado} />
+                  <RecadoItem
+                    key={recado.id}
+                    recado={recado}
+                    busy={apagando}
+                    onEdit={(item) => {
+                      setAviso(null);
+                      setEmEdicao(null);
+                      setRecadoEmEdicao(item);
+                      setSheetAberto(true);
+                    }}
+                    onDelete={confirmarExclusaoRecado}
+                  />
                 ))}
               </View>
             )}
@@ -135,10 +172,11 @@ function RecadosDoAluno({ aluno }: { aluno: Aluno }) {
       ) : null}
 
       <NovoItemSheet
-        key={emEdicao?.id ?? 'novo'}
+        key={`${emEdicao?.id ?? 'novo'}-${recadoEmEdicao?.id ?? ''}`}
         visible={sheetAberto}
         aluno={aluno}
         medicamento={emEdicao}
+        recado={recadoEmEdicao}
         onClose={() => setSheetAberto(false)}
         onSent={() => {
           setSheetAberto(false);
