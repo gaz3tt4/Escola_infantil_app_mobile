@@ -124,6 +124,7 @@ export function PagamentosScreen() {
       <CobrancaAvulsaSheet
         visible={avulsaAberta}
         alunos={alunos}
+        faturas={data?.faturas ?? []}
         alunoInicialId={filtroAtivo === 'todos' ? null : filtroAtivo}
         onClose={() => setAvulsaAberta(false)}
         onCreated={(fatura, aluno) => {

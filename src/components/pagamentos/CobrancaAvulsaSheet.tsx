@@ -8,7 +8,7 @@ import { ChipSelector } from '../ui/ChipSelector';
 import { Notice } from '../ui/Notice';
 import { TextField } from '../ui/TextField';
 import { toApiError } from '../../services/errors';
-import { gerarCobrancaAvulsa, TIPO_LABEL, type FormaPagamento } from '../../services/faturas';
+import { gerarCobrancaAvulsa, TIPO_LABEL, type FaturaComAluno, type FormaPagamento } from '../../services/faturas';
 import type { Aluno, Fatura, TipoFatura } from '../../services/types';
 import { colors, spacing } from '../../theme';
 import { maskDateBR, parseDateBR, todayISO } from '../../utils/format';
@@ -16,6 +16,8 @@ import { maskDateBR, parseDateBR, todayISO } from '../../utils/format';
 interface CobrancaAvulsaSheetProps {
   visible: boolean;
   alunos: Aluno[];
+  /** Faturas já carregadas: a matrícula cancelada só pode ser regerada pela escola (admin). */
+  faturas: Pick<FaturaComAluno, 'alunoId' | 'tipo' | 'status'>[];
   /** Aluno pré-selecionado (filtro atual da lista). */
   alunoInicialId: number | null;
   onClose: () => void;
@@ -25,7 +27,7 @@ interface CobrancaAvulsaSheetProps {
 type FieldErrors = Partial<Record<'vencimento' | 'tipo' | 'forma', string>>;
 
 /** POST /alunos/{id}/faturas/avulsa: adiantar mensalidade ou gerar a cobrança da matrícula. */
-export function CobrancaAvulsaSheet({ visible, alunos, alunoInicialId, onClose, onCreated }: CobrancaAvulsaSheetProps) {
+export function CobrancaAvulsaSheet({ visible, alunos, faturas, alunoInicialId, onClose, onCreated }: CobrancaAvulsaSheetProps) {
   const [alunoId, setAlunoId] = useState<number | null>(alunoInicialId);
   const [tipo, setTipo] = useState<TipoFatura>('mensalidade');
   const [forma, setForma] = useState<FormaPagamento>('pix');
@@ -35,6 +37,10 @@ export function CobrancaAvulsaSheet({ visible, alunos, alunoInicialId, onClose, 
   const [submitting, setSubmitting] = useState(false);
 
   const aluno = alunos.find((item) => item.id === (alunoId ?? alunoInicialId)) ?? alunos[0];
+  const matriculaCancelada =
+    !!aluno && faturas.some((fatura) => fatura.alunoId === aluno.id && fatura.tipo === 'matricula' && fatura.status === 'cancelada');
+  // Decisão 21: com a matrícula cancelada só a escola gera nova cobrança; o app oferece apenas a mensalidade.
+  const tipoEfetivo: TipoFatura = matriculaCancelada ? 'mensalidade' : tipo;
 
   function reset() {
     setAlunoId(null);
@@ -72,7 +78,7 @@ export function CobrancaAvulsaSheet({ visible, alunos, alunoInicialId, onClose, 
 
     setSubmitting(true);
     try {
-      const fatura = await gerarCobrancaAvulsa(aluno.id, { tipo, forma, vencimento: vencimentoISO });
+      const fatura = await gerarCobrancaAvulsa(aluno.id, { tipo: tipoEfetivo, forma, vencimento: vencimentoISO });
       reset();
       onCreated(fatura, aluno);
     } catch (error) {
@@ -84,7 +90,8 @@ export function CobrancaAvulsaSheet({ visible, alunos, alunoInicialId, onClose, 
       };
       const hasFieldError = Object.values(errors).some(Boolean);
       setFieldErrors(errors);
-      // 422 sem campo: antecipação acima de 2 meses, mensalidade inexistente, cobrança já existente, falha no Asaas.
+      // 422/403 sem campo: antecipação acima de 2 meses, mensalidade inexistente, cobrança já existente,
+      // matrícula cancelada (só o admin gera nova) ou falha no Asaas. Mostra a mensagem do backend.
       if (!hasFieldError) setFormError(apiError.message);
     } finally {
       setSubmitting(false);
@@ -108,10 +115,16 @@ export function CobrancaAvulsaSheet({ visible, alunos, alunoInicialId, onClose, 
         <Text style={styles.label}>Tipo de cobrança</Text>
         <ChipSelector
           scroll={false}
-          options={(['mensalidade', 'matricula'] as const).map((value) => ({ value, label: TIPO_LABEL[value] }))}
-          value={tipo}
+          options={(matriculaCancelada ? (['mensalidade'] as const) : (['mensalidade', 'matricula'] as const)).map((value) => ({
+            value,
+            label: TIPO_LABEL[value],
+          }))}
+          value={tipoEfetivo}
           onChange={setTipo}
         />
+        {matriculaCancelada ? (
+          <Text style={styles.hint}>A cobrança da matrícula foi cancelada. Para gerar uma nova, fale com a secretaria da escola.</Text>
+        ) : null}
         {fieldErrors.tipo ? <Text style={styles.error}>{fieldErrors.tipo}</Text> : null}
       </View>
 
@@ -133,7 +146,7 @@ export function CobrancaAvulsaSheet({ visible, alunos, alunoInicialId, onClose, 
           editable={!submitting}
         />
         <Text style={styles.hint}>
-          {tipo === 'mensalidade'
+          {tipoEfetivo === 'mensalidade'
             ? 'Na mensalidade, a data escolhe o mês a adiantar (até 2 meses à frente). Sem data, usa o mês atual.'
             : 'Sem data, vale o prazo de vencimento padrão da escola.'}
         </Text>

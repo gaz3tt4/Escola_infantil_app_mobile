@@ -6,6 +6,26 @@ import type { Aviso } from '../../services/types';
 import { colors, spacing } from '../../theme';
 import { formatDateBR } from '../../utils/format';
 
+interface VisualTipo {
+  icon: string;
+  label: string;
+  bg: string;
+  fg: string;
+}
+
+// Cores do design system; tipo desconhecido cai em `geral`.
+const GERAL: VisualTipo = { icon: '📣', label: 'Aviso', bg: colors.brandSoft, fg: colors.brandDark };
+const VISUAL_POR_TIPO: Record<string, VisualTipo> = {
+  feriado: { icon: '🎉', label: 'Feriado', bg: colors.coralSoft, fg: '#B23A2C' },
+  aula_extra: { icon: '⭐', label: 'Aula extra', bg: colors.lavenderSoft, fg: '#5B4FBF' },
+  evento: { icon: '🎈', label: 'Evento', bg: colors.skySoft, fg: '#1E6FA8' },
+  geral: GERAL,
+};
+
+export function visualDoAviso(tipo: string | undefined): VisualTipo {
+  return (tipo && VISUAL_POR_TIPO[tipo]) || GERAL;
+}
+
 function periodo(aviso: Aviso): string {
   if (aviso.data_fim && aviso.data_fim !== aviso.data) {
     return `${formatDateBR(aviso.data)} a ${formatDateBR(aviso.data_fim)}`;
@@ -21,18 +41,23 @@ export function AvisosList({ avisos }: { avisos: Aviso[] }) {
     <Card>
       <Text style={styles.title}>Avisos da escola</Text>
       <View style={styles.list}>
-        {avisos.map((aviso) => (
+        {avisos.map((aviso) => {
+          const visual = visualDoAviso(aviso.tipo);
+          return (
           <View key={aviso.id} style={styles.item}>
-            <View style={styles.iconWrap}>
-              <Text style={styles.icon}>📣</Text>
+            <View style={[styles.iconWrap, { backgroundColor: visual.bg }]}>
+              <Text style={styles.icon}>{visual.icon}</Text>
             </View>
             <View style={styles.itemBody}>
-              <Text style={styles.periodo}>{periodo(aviso)}</Text>
+              <Text style={[styles.periodo, { color: visual.fg }]}>
+                {visual.label} · {periodo(aviso)}
+              </Text>
               <Text style={styles.itemTitle}>{aviso.titulo}</Text>
               <Text style={styles.itemText}>{aviso.texto}</Text>
             </View>
           </View>
-        ))}
+          );
+        })}
       </View>
     </Card>
   );
@@ -58,7 +83,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.brandSoft,
   },
   icon: {
     fontSize: 16,
@@ -70,7 +94,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
-    color: colors.brandDark,
     marginBottom: 2,
   },
   itemTitle: {

@@ -8,17 +8,19 @@ import { ChipSelector } from '../ui/ChipSelector';
 import { Notice } from '../ui/Notice';
 import { TextField } from '../ui/TextField';
 import { toApiError } from '../../services/errors';
-import { criarMedicamento, type ArquivoReceita } from '../../services/medicamentos';
+import { atualizarMedicamento, criarMedicamento, type ArquivoReceita } from '../../services/medicamentos';
 import { enviarRecado, TEXTO_RECADO_MAX } from '../../services/recados';
-import type { Aluno } from '../../services/types';
+import type { Aluno, Medicamento } from '../../services/types';
 import { colors } from '../../theme';
-import { maskDateBR, parseDateBR, todayISO } from '../../utils/format';
+import { formatDateBR, maskDateBR, parseDateBR, todayISO } from '../../utils/format';
 
 type Aba = 'recado' | 'medicamento';
 
 interface NovoItemSheetProps {
   visible: boolean;
   aluno: Aluno;
+  /** Medicamento em edição; use `key` para reiniciar o formulário ao trocar. */
+  medicamento?: Medicamento | null;
   onClose: () => void;
   /** Chamado depois de enviar com sucesso (para recarregar as listas). */
   onSent: () => void;
@@ -38,18 +40,19 @@ function hoje(): string {
 }
 
 /** Bottom sheet com duas abas: recado ao professor e medicamento (com receita obrigatória). */
-export function NovoItemSheet({ visible, aluno, onClose, onSent }: NovoItemSheetProps) {
-  const [aba, setAba] = useState<Aba>('recado');
+export function NovoItemSheet({ visible, aluno, medicamento, onClose, onSent }: NovoItemSheetProps) {
+  const edicao = medicamento ?? null;
+  const [aba, setAba] = useState<Aba>(edicao ? 'medicamento' : 'recado');
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
   const [texto, setTexto] = useState('');
   const [erroTexto, setErroTexto] = useState<string | null>(null);
 
-  const [nome, setNome] = useState('');
-  const [dose, setDose] = useState('');
-  const [horario, setHorario] = useState('');
-  const [dataTexto, setDataTexto] = useState(hoje);
+  const [nome, setNome] = useState(edicao?.nome ?? '');
+  const [dose, setDose] = useState(edicao?.dose ?? '');
+  const [horario, setHorario] = useState(edicao?.horario.slice(0, 5) ?? '');
+  const [dataTexto, setDataTexto] = useState(() => (edicao ? formatDateBR(edicao.data_administracao) : hoje()));
   const [receita, setReceita] = useState<ArquivoReceita | null>(null);
   const [erros, setErros] = useState<Erros>({});
 
@@ -100,19 +103,20 @@ export function NovoItemSheet({ visible, aluno, onClose, onSent }: NovoItemSheet
     if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(horario)) novos.horario = 'Use o formato HH:mm (ex.: 14:30).';
     if (!data) novos.data = 'Informe uma data válida (dd/mm/aaaa).';
     else if (data < todayISO()) novos.data = 'A data não pode estar no passado.';
-    // Sem receita não há envio (decisão do cliente); o backend também recusa.
-    if (!receita) novos.receita = 'Anexe a foto da receita para enviar.';
+    // Sem receita não há envio (decisão do cliente); o backend também recusa. Na edição a atual é mantida.
+    if (!edicao && !receita) novos.receita = 'Anexe a foto da receita para enviar.';
     setErros(novos);
     setFormError(null);
-    if (Object.keys(novos).length > 0 || !data || !receita) return;
+    if (Object.keys(novos).length > 0 || !data) return;
 
     setSubmitting(true);
     try {
-      await criarMedicamento(
-        aluno.id,
-        { nome: nome.trim(), dose: dose.trim(), horario, data_administracao: data },
-        receita
-      );
+      const dados = { nome: nome.trim(), dose: dose.trim(), horario, data_administracao: data };
+      if (edicao) {
+        await atualizarMedicamento(edicao.id, dados, receita);
+      } else if (receita) {
+        await criarMedicamento(aluno.id, dados, receita);
+      }
       resetar();
       onSent();
     } catch (error) {
@@ -126,6 +130,7 @@ export function NovoItemSheet({ visible, aluno, onClose, onSent }: NovoItemSheet
       };
       const temCampo = Object.values(doServidor).some(Boolean);
       setErros(doServidor);
+      // 403/422 sem campo (fora do prazo, já administrado, sem permissão): mostra a mensagem do backend.
       if (!temCampo) setFormError(apiError.message);
     } finally {
       setSubmitting(false);
@@ -133,7 +138,13 @@ export function NovoItemSheet({ visible, aluno, onClose, onSent }: NovoItemSheet
   }
 
   return (
-    <BottomSheet visible={visible} title="Enviar à escola" subtitle={`Para a turma de ${aluno.nome.split(' ')[0]}`} onClose={fechar}>
+    <BottomSheet
+      visible={visible}
+      title={edicao ? 'Editar medicamento' : 'Enviar à escola'}
+      subtitle={edicao ? 'Só é possível alterar no dia da administração, antes de administrado' : `Para a turma de ${aluno.nome.split(' ')[0]}`}
+      onClose={fechar}
+    >
+      {edicao ? null : (
       <ChipSelector<Aba>
         scroll={false}
         options={[
@@ -146,6 +157,7 @@ export function NovoItemSheet({ visible, aluno, onClose, onSent }: NovoItemSheet
           setFormError(null);
         }}
       />
+      )}
 
       {aba === 'recado' ? (
         <>
@@ -195,9 +207,14 @@ export function NovoItemSheet({ visible, aluno, onClose, onSent }: NovoItemSheet
             placeholder="dd/mm/aaaa"
             editable={!submitting}
           />
-          <ReceitaPicker value={receita} onChange={setReceita} error={erros.receita} disabled={submitting} />
+          <ReceitaPicker value={receita} onChange={setReceita} error={erros.receita} disabled={submitting} opcional={!!edicao} />
           {formError ? <Notice message={formError} /> : null}
-          <Button title="Enviar medicamento" onPress={enviarMedicamento} loading={submitting} disabled={!receita} />
+          <Button
+            title={edicao ? 'Salvar alterações' : 'Enviar medicamento'}
+            onPress={enviarMedicamento}
+            loading={submitting}
+            disabled={!edicao && !receita}
+          />
         </>
       )}
     </BottomSheet>

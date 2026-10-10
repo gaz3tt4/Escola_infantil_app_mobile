@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 
 import { AlunoSwitcher, useAlunosGate } from '../components/AlunoSwitcher';
 import { MedicamentoItem } from '../components/recados/MedicamentoItem';
@@ -10,12 +10,14 @@ import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { LoadingView } from '../components/ui/LoadingView';
 import { Mascote } from '../components/ui/Mascote';
+import { Notice } from '../components/ui/Notice';
 import { ScreenContainer } from '../components/ui/ScreenContainer';
 import { useAlunos } from '../context/AlunosContext';
 import { useAsyncResource } from '../hooks/useAsyncResource';
-import { listarMedicamentos } from '../services/medicamentos';
+import { toApiError } from '../services/errors';
+import { apagarMedicamento, listarMedicamentos } from '../services/medicamentos';
 import { listarRecados } from '../services/recados';
-import type { Aluno } from '../services/types';
+import type { Aluno, Medicamento } from '../services/types';
 import { colors, spacing, typography } from '../theme';
 import { firstName } from '../utils/format';
 
@@ -44,6 +46,32 @@ function RecadosDoAluno({ aluno }: { aluno: Aluno }) {
   );
   const { data, error, isLoading, isRefreshing, reload } = useAsyncResource(loader);
   const [sheetAberto, setSheetAberto] = useState(false);
+  const [emEdicao, setEmEdicao] = useState<Medicamento | null>(null);
+  const [apagando, setApagando] = useState(false);
+  const [aviso, setAviso] = useState<string | null>(null);
+
+  function confirmarExclusao(medicamento: Medicamento) {
+    Alert.alert('Apagar medicamento?', `${medicamento.nome} e a receita enviada serão removidos.`, [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Apagar',
+        style: 'destructive',
+        onPress: async () => {
+          setApagando(true);
+          setAviso(null);
+          try {
+            await apagarMedicamento(medicamento.id);
+          } catch (error) {
+            // 403 (sem permissão) ou 422 (fora do prazo): a mensagem vem do backend.
+            setAviso(toApiError(error).message);
+          } finally {
+            setApagando(false);
+            reload();
+          }
+        },
+      },
+    ]);
+  }
 
   return (
     <ScreenContainer refreshing={isRefreshing} onRefresh={reload}>
@@ -53,9 +81,17 @@ function RecadosDoAluno({ aluno }: { aluno: Aluno }) {
           <Mascote size={22} segments={3} />
         </View>
         <AlunoSwitcher />
-        <Button title="Enviar recado ou medicamento" onPress={() => setSheetAberto(true)} />
+        <Button
+          title="Enviar recado ou medicamento"
+          onPress={() => {
+            setAviso(null);
+            setEmEdicao(null);
+            setSheetAberto(true);
+          }}
+        />
       </View>
 
+      {aviso ? <Notice message={aviso} /> : null}
       {isLoading ? <LoadingView label="Carregando recados..." /> : null}
       {error ? <ErrorState message={error} onRetry={reload} /> : null}
       {data ? (
@@ -67,7 +103,17 @@ function RecadosDoAluno({ aluno }: { aluno: Aluno }) {
             ) : (
               <View style={styles.list}>
                 {data.medicamentos.map((medicamento) => (
-                  <MedicamentoItem key={medicamento.id} medicamento={medicamento} />
+                  <MedicamentoItem
+                    key={medicamento.id}
+                    medicamento={medicamento}
+                    busy={apagando}
+                    onEdit={(item) => {
+                      setAviso(null);
+                      setEmEdicao(item);
+                      setSheetAberto(true);
+                    }}
+                    onDelete={confirmarExclusao}
+                  />
                 ))}
               </View>
             )}
@@ -89,8 +135,10 @@ function RecadosDoAluno({ aluno }: { aluno: Aluno }) {
       ) : null}
 
       <NovoItemSheet
+        key={emEdicao?.id ?? 'novo'}
         visible={sheetAberto}
         aluno={aluno}
+        medicamento={emEdicao}
         onClose={() => setSheetAberto(false)}
         onSent={() => {
           setSheetAberto(false);

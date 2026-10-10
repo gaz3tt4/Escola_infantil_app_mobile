@@ -13,10 +13,12 @@ interface ReceitaPickerProps {
   onChange: (receita: ArquivoReceita | null) => void;
   error?: string | null;
   disabled?: boolean;
+  /** Na edição a receita atual é mantida; trocar é opcional. */
+  opcional?: boolean;
 }
 
 /** Anexo obrigatório da receita: só câmera ou galeria (sem PDF). */
-export function ReceitaPicker({ value, onChange, error, disabled }: ReceitaPickerProps) {
+export function ReceitaPicker({ value, onChange, error, disabled, opcional }: ReceitaPickerProps) {
   const [working, setWorking] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -73,14 +75,18 @@ export function ReceitaPicker({ value, onChange, error, disabled }: ReceitaPicke
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Receita médica (obrigatória)</Text>
+      <Text style={styles.label}>{opcional ? 'Trocar a receita (opcional)' : 'Receita médica (obrigatória)'}</Text>
       {value ? (
         <View style={styles.preview}>
           <Image source={{ uri: value.uri }} style={styles.image} accessibilityLabel="Foto da receita anexada" />
           <Text style={styles.ok}>Receita anexada</Text>
         </View>
       ) : (
-        <Text style={styles.hint}>Tire uma foto da receita ou escolha uma imagem da galeria.</Text>
+        <Text style={styles.hint}>
+          {opcional
+            ? 'A receita já enviada será mantida. Tire uma nova foto ou escolha da galeria só se quiser trocá-la.'
+            : 'Tire uma foto da receita ou escolha uma imagem da galeria.'}
+        </Text>
       )}
       <View style={styles.buttons}>
         <View style={styles.flex}>

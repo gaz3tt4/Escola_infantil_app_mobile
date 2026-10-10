@@ -215,6 +215,8 @@ export interface DispositivoPushRequest {
 /** GET /alunos/{id}/avisos. `data_fim` nulo = aviso de um dia só. */
 export interface Aviso {
   id: number;
+  /** feriado | aula_extra | evento | geral; valor desconhecido usa o visual de `geral`. */
+  tipo?: string;
   titulo: string;
   texto: string;
   data: string; // Y-m-d
@@ -246,6 +248,8 @@ export interface Medicamento {
   administrado_em: string | null; // ISO 8601
   /** Só o nome do professor, ou null. */
   administrado_por: string | null;
+  /** Editável/apagável pelo responsável: no dia da administração e antes de administrado. */
+  editavel?: boolean;
 }
 
 // ---------- Envelopes ----------

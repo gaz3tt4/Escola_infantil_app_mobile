@@ -1,5 +1,6 @@
 import { http } from './http';
-import type { DataEnvelope, Medicamento } from './types';
+import type { DataEnvelope, MessageResponse, Medicamento } from './types';
+import { todayISO } from '../utils/format';
 
 /** Arquivo da receita já comprimido (JPEG), pronto para o multipart. */
 export interface ArquivoReceita {
@@ -47,4 +48,48 @@ export async function criarMedicamento(
     timeout: UPLOAD_TIMEOUT_MS,
   });
   return data.data;
+}
+
+/** Parte editável de um medicamento (todos os campos são opcionais na API). */
+export type EdicaoMedicamento = Partial<NovoMedicamento>;
+
+/**
+ * POST /medicamentos/{id} com _method=PATCH (multipart: o PHP não lê multipart em PATCH).
+ * A receita nova é opcional: sem ela, a atual é mantida.
+ */
+export async function atualizarMedicamento(
+  medicamentoId: number,
+  alteracoes: EdicaoMedicamento,
+  receita?: ArquivoReceita | null
+): Promise<Medicamento> {
+  const form = new FormData();
+  form.append('_method', 'PATCH');
+  if (alteracoes.nome !== undefined) form.append('nome', alteracoes.nome);
+  if (alteracoes.dose !== undefined) form.append('dose', alteracoes.dose);
+  if (alteracoes.horario !== undefined) form.append('horario', alteracoes.horario);
+  if (alteracoes.data_administracao !== undefined) form.append('data_administracao', alteracoes.data_administracao);
+  if (receita) {
+    form.append('receita', { uri: receita.uri, name: receita.name, type: receita.type } as unknown as Blob);
+  }
+
+  const { data } = await http.post<DataEnvelope<Medicamento>>(`/medicamentos/${medicamentoId}`, form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: UPLOAD_TIMEOUT_MS,
+  });
+  return data.data;
+}
+
+/** DELETE /medicamentos/{id}: remove o medicamento e a receita (só no dia e antes de administrado). */
+export async function apagarMedicamento(medicamentoId: number): Promise<string> {
+  const { data } = await http.delete<MessageResponse>(`/medicamentos/${medicamentoId}`);
+  return data.message;
+}
+
+/**
+ * Pode editar/apagar? Usa `editavel` do backend; sem ele (versão antiga da API), aplica a mesma
+ * regra localmente: no dia da administração e enquanto não administrado.
+ */
+export function medicamentoEditavel(medicamento: Medicamento): boolean {
+  if (typeof medicamento.editavel === 'boolean') return medicamento.editavel;
+  return !medicamento.administrado && medicamento.data_administracao === todayISO();
 }
