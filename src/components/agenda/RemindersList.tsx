@@ -2,9 +2,10 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Card } from '../ui/Card';
+import { DemoBadge } from '../ui/DemoBadge';
 import { colors, spacing } from '../../theme';
 import { formatDateBR } from '../../utils/format';
-import type { Lembrete } from '../../services/agenda';
+import type { Lembrete } from '../../services/lembretes';
 
 const TIPO_META: Record<Lembrete['tipo'], { icon: string; bg: string; fg: string; label: string }> = {
   feriado: { icon: '🎉', bg: colors.coralSoft, fg: '#B23A2C', label: 'Feriado' },
@@ -30,7 +31,10 @@ function ReminderItem({ reminder }: { reminder: Lembrete }) {
 export function RemindersList({ reminders }: { reminders: Lembrete[] }) {
   return (
     <Card>
-      <Text style={styles.title}>Lembretes</Text>
+      <View style={styles.titleRow}>
+        <Text style={styles.title}>Lembretes</Text>
+        <DemoBadge />
+      </View>
       {reminders.length === 0 ? (
         <Text style={styles.empty}>Nenhum lembrete por enquanto.</Text>
       ) : (
@@ -45,11 +49,16 @@ export function RemindersList({ reminders }: { reminders: Lembrete[] }) {
 }
 
 const styles = StyleSheet.create({
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
   title: {
     fontSize: 17,
     fontWeight: '700',
     color: colors.textPrimary,
-    marginBottom: spacing.sm,
   },
   empty: {
     color: colors.textSecondary,

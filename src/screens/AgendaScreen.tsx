@@ -2,16 +2,17 @@ import React, { useCallback, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { AlunoSwitcher, useAlunosGate } from '../components/AlunoSwitcher';
-import { DailyReportCard } from '../components/agenda/DailyReportCard';
+import { AgendaDoDia, agendaVazia } from '../components/agenda/AgendaDoDia';
 import { RemindersList } from '../components/agenda/RemindersList';
-import { DemoBadge } from '../components/ui/DemoBadge';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { LoadingView } from '../components/ui/LoadingView';
+import { Mascote } from '../components/ui/Mascote';
 import { ScreenContainer } from '../components/ui/ScreenContainer';
 import { useAlunos } from '../context/AlunosContext';
 import { useAsyncResource } from '../hooks/useAsyncResource';
-import { listarLembretes, obterRelatorioDiario } from '../services/agenda';
+import { obterAgenda } from '../services/agenda';
+import { listarLembretes } from '../services/lembretes';
 import type { Aluno } from '../services/types';
 import { colors, radius, spacing, typography } from '../theme';
 import { addDaysISO, firstName, formatDateLong, todayISO } from '../utils/format';
@@ -36,8 +37,8 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
 
   const loader = useCallback(
     () =>
-      Promise.all([obterRelatorioDiario(aluno.id, date), listarLembretes()]).then(([relatorio, lembretes]) => ({
-        relatorio,
+      Promise.all([obterAgenda(aluno.id, date), listarLembretes()]).then(([agenda, lembretes]) => ({
+        agenda,
         lembretes,
       })),
     [aluno.id, date]
@@ -49,7 +50,6 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
       <View style={styles.header}>
         <View style={styles.titleRow}>
           <Text style={typography.title}>Agenda de {firstName(aluno.nome)}</Text>
-          <DemoBadge />
         </View>
         <AlunoSwitcher />
         <View style={styles.dateNav}>
@@ -78,14 +78,21 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
       {error ? <ErrorState message={error} onRetry={reload} /> : null}
       {data ? (
         <>
-          {data.relatorio ? (
-            <DailyReportCard report={data.relatorio} />
+          {data.agenda && !agendaVazia(data.agenda) ? (
+            <AgendaDoDia agenda={data.agenda} />
           ) : (
-            <EmptyState
-              icon="📭"
-              title="Sem relatório neste dia"
-              description="A professora ainda não preencheu o relatório diário para essa data."
-            />
+            <View style={styles.vazio}>
+              <Mascote size={30} segments={3} />
+              <EmptyState
+                icon="📭"
+                title={data.agenda ? 'Agenda sem registros' : 'Sem agenda neste dia'}
+                description={
+                  data.agenda
+                    ? 'A professora ainda não registrou nada nesta agenda.'
+                    : 'A professora ainda não lançou a agenda para essa data.'
+                }
+              />
+            </View>
           )}
           <RemindersList reminders={data.lembretes} />
         </>
@@ -103,6 +110,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: spacing.sm,
+  },
+  vazio: {
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingTop: spacing.md,
   },
   dateNav: {
     flexDirection: 'row',

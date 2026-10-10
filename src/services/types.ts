@@ -127,6 +127,65 @@ export interface PagamentoBoletoResponse {
 
 export type PagamentoResponse = PagamentoPixResponse | PagamentoBoletoResponse;
 
+// ---------- Agenda ----------
+
+/** `I` = infantil, `B` = berçário. Define se a agenda traz evacuação e xixi. */
+export type SegmentoTurma = 'I' | 'B';
+export type TipoRefeicao = 'lanche_manha' | 'almoco' | 'lanche_tarde' | 'jantar';
+export type AceitacaoRefeicao = 'pouco' | 'metade' | 'recusou' | 'tudo';
+export type TipoEvacuacao = 'normal' | 'pastoso' | 'semipastoso';
+export type AspectoXixi = 'normal' | 'escuro';
+
+/** Horas vêm como HH:mm ou null. */
+export interface RefeicaoAgenda {
+  id: number;
+  tipo: TipoRefeicao;
+  horario: string | null;
+  aceitacao: AceitacaoRefeicao | null;
+  /** Preenchido quando `aceitacao` é `recusou`. */
+  alimento_recusado: string | null;
+  observacao: string | null;
+}
+
+export interface SonecaAgenda {
+  id: number;
+  dormiu_em: string | null;
+  acordou_em: string | null;
+}
+
+export interface MamadeiraAgenda {
+  id: number;
+  quantidade_ml: number;
+  horario: string | null;
+}
+
+export interface EvacuacaoAgenda {
+  horario: string | null;
+  tipo: TipoEvacuacao;
+  observacao: string | null;
+}
+
+export interface XixiAgenda {
+  horario: string | null;
+  aspecto: AspectoXixi;
+  observacao: string | null;
+}
+
+/** GET /alunos/{aluno}/agenda?data=Y-m-d. `evacuacao` e `xixi` só existem no berçário. */
+export interface Agenda {
+  id: number;
+  data: string; // Y-m-d
+  segmento: SegmentoTurma;
+  refeicoes: RefeicaoAgenda[];
+  sonecas: SonecaAgenda[];
+  mamadeiras: MamadeiraAgenda[];
+  evacuacao: EvacuacaoAgenda | null;
+  xixi: XixiAgenda | null;
+  /** Ciência do responsável; o backend devolve false/null até a etapa de ciência. */
+  ciente: boolean;
+  ciente_em: string | null;
+}
+
 // ---------- Envelopes ----------
 
 /** Envelope `{ data: ... }` dos API Resources do Laravel. */

@@ -1,36 +1,44 @@
-import type { Humor, NivelAlimentacao, NivelHigiene, NivelSono } from '../../services/agenda';
+import type {
+  AceitacaoRefeicao,
+  AspectoXixi,
+  SegmentoTurma,
+  TipoEvacuacao,
+  TipoRefeicao,
+} from '../../services/types';
 
-export const alimentacaoLabels: Record<NivelAlimentacao, string> = {
-  nao_comeu: 'Não comeu',
-  comeu_pouco: 'Comeu pouco',
-  comeu_bem: 'Comeu bem',
-  comeu_tudo: 'Comeu tudo',
+export const segmentoLabels: Record<SegmentoTurma, string> = {
+  B: 'Berçário',
+  I: 'Infantil',
 };
 
-export const sonoLabels: Record<NivelSono, string> = {
-  nao_dormiu: 'Não dormiu',
-  dormiu_pouco: 'Dormiu pouco',
-  dormiu_bem: 'Dormiu bem',
+export const refeicaoLabels: Record<TipoRefeicao, string> = {
+  lanche_manha: 'Lanche da manhã',
+  almoco: 'Almoço',
+  lanche_tarde: 'Lanche da tarde',
+  jantar: 'Jantar',
 };
 
-export const higieneLabels: Record<NivelHigiene, string> = {
-  trocado: 'Fralda trocada',
-  usou_banheiro: 'Usou o banheiro',
-  sem_ocorrencias: 'Sem ocorrências',
+export const refeicaoIcons: Record<TipoRefeicao, string> = {
+  lanche_manha: '🍎',
+  almoco: '🍽️',
+  lanche_tarde: '🥪',
+  jantar: '🍲',
 };
 
-export const humorLabels: Record<Humor, string> = {
-  feliz: 'Feliz',
-  calmo: 'Calmo',
-  agitado: 'Agitado',
-  choroso: 'Choroso',
-  cansado: 'Cansado',
+export const aceitacaoLabels: Record<AceitacaoRefeicao, string> = {
+  pouco: 'Comeu pouco',
+  metade: 'Comeu metade',
+  recusou: 'Recusou',
+  tudo: 'Comeu tudo',
 };
 
-export const humorEmojis: Record<Humor, string> = {
-  feliz: '😄',
-  calmo: '🙂',
-  agitado: '🤸',
-  choroso: '😢',
-  cansado: '😴',
+export const evacuacaoLabels: Record<TipoEvacuacao, string> = {
+  normal: 'Normal',
+  pastoso: 'Pastoso',
+  semipastoso: 'Semipastoso',
+};
+
+export const xixiLabels: Record<AspectoXixi, string> = {
+  normal: 'Normal',
+  escuro: 'Escuro',
 };
