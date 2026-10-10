@@ -1,6 +1,5 @@
 import { http } from './http';
 import type { DataEnvelope, MessageResponse, Medicamento } from './types';
-import { todayISO } from '../utils/format';
 
 /** Arquivo da receita já comprimido (JPEG), pronto para o multipart. */
 export interface ArquivoReceita {
@@ -79,17 +78,23 @@ export async function atualizarMedicamento(
   return data.data;
 }
 
-/** DELETE /medicamentos/{id}: remove o medicamento e a receita (só no dia e antes de administrado). */
+/** DELETE /medicamentos/{id}: remove o medicamento e a receita (só o autor, no prazo e antes de administrado). */
 export async function apagarMedicamento(medicamentoId: number): Promise<string> {
   const { data } = await http.delete<MessageResponse>(`/medicamentos/${medicamentoId}`);
   return data.message;
 }
 
 /**
- * Pode editar/apagar? Usa `editavel` do backend; sem ele (versão antiga da API), aplica a mesma
- * regra localmente: no dia da administração e enquanto não administrado.
+ * Pode editar/apagar? Só o autor, antes de administrado e dentro de `editavel_ate` (mesma lógica dos
+ * recados; o backend manda `editavel_ate` nulo para quem não é o autor). Quem decide é o backend:
+ * sem `editavel_ate` nem `editavel` na resposta, as ações ficam escondidas.
  */
-export function medicamentoEditavel(medicamento: Medicamento): boolean {
-  if (typeof medicamento.editavel === 'boolean') return medicamento.editavel;
-  return !medicamento.administrado && medicamento.data_administracao === todayISO();
+export function medicamentoEditavel(medicamento: Medicamento, agora: number = Date.now()): boolean {
+  if (medicamento.administrado) return false;
+  if (medicamento.editavel_ate !== undefined) {
+    if (!medicamento.editavel_ate) return false;
+    const limite = Date.parse(medicamento.editavel_ate);
+    return Number.isFinite(limite) && limite > agora;
+  }
+  return medicamento.editavel === true;
 }

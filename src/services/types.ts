@@ -250,7 +250,13 @@ export interface Medicamento {
   administrado_em: string | null; // ISO 8601
   /** Só o nome do professor, ou null. */
   administrado_por: string | null;
-  /** Editável/apagável pelo responsável: no dia da administração e antes de administrado. */
+  /**
+   * ISO 8601 (-03:00) até quando o responsável AUTOR pode editar/apagar (mesmo prazo dos recados:
+   * manhã/integral até 07h do dia seguinte, tarde até 12h); null nos medicamentos de outro responsável
+   * ou já administrados.
+   */
+  editavel_ate?: string | null;
+  /** Sinalizador da primeira versão do contrato; vale só se `editavel_ate` não vier. */
   editavel?: boolean;
 }
 

@@ -20,7 +20,7 @@ export function MedicamentoItem({
   onDelete?: (medicamento: Medicamento) => void;
   busy?: boolean;
 }) {
-  // Fora do prazo (outro dia ou já administrado) as ações somem.
+  // Só o autor, no prazo e antes de administrado; fora disso as ações somem.
   const editavel = medicamentoEditavel(medicamento);
   const status = medicamento.administrado
     ? `Administrado${medicamento.administrado_em ? ` em ${formatDateTimeBR(medicamento.administrado_em)}` : ''}${

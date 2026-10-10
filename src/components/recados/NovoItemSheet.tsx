@@ -109,7 +109,8 @@ export function NovoItemSheet({ visible, aluno, medicamento, recado, onClose, on
     if (!dose.trim()) novos.dose = 'Informe a dose.';
     if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(horario)) novos.horario = 'Use o formato HH:mm (ex.: 14:30).';
     if (!data) novos.data = 'Informe uma data válida (dd/mm/aaaa).';
-    else if (data < todayISO()) novos.data = 'A data não pode estar no passado.';
+    // Na edição, a data original pode estar no passado (prazo até 07h/12h do dia seguinte).
+    else if (data < todayISO() && !(edicao && data === edicao.data_administracao)) novos.data = 'A data não pode estar no passado.';
     // Sem receita não há envio (decisão do cliente); o backend também recusa. Na edição a atual é mantida.
     if (!edicao && !receita) novos.receita = 'Anexe a foto da receita para enviar.';
     setErros(novos);
@@ -150,7 +151,9 @@ export function NovoItemSheet({ visible, aluno, medicamento, recado, onClose, on
       title={edicao ? 'Editar medicamento' : recadoEdicao ? 'Editar recado' : 'Enviar à escola'}
       subtitle={
         edicao
-          ? 'Só é possível alterar no dia da administração, antes de administrado'
+          ? edicao.editavel_ate
+            ? `Você pode alterar até ${formatDateTimeBR(edicao.editavel_ate)}, antes de ser administrado`
+            : 'Só é possível alterar antes de ser administrado'
           : recadoEdicao
             ? recadoEdicao.editavel_ate
               ? `Você pode alterar até ${formatDateTimeBR(recadoEdicao.editavel_ate)}`
