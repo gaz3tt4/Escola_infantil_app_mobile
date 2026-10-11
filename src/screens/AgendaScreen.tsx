@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { AlunoSwitcher, useAlunosGate } from '../components/AlunoSwitcher';
 import { AgendaDoDia, agendaSemBlocos, agendaSemConteudo } from '../components/agenda/AgendaDoDia';
 import { AvisosList } from '../components/agenda/AvisosList';
 import { CienciaBarra, CienciaSheet } from '../components/agenda/CienciaSheet';
+import { NovoItemSheet } from '../components/recados/NovoItemSheet';
 import { Button } from '../components/ui/Button';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
@@ -19,7 +20,9 @@ import { useFimDaPagina } from '../hooks/useFimDaPagina';
 import { clearAgendaTarget, useAgendaTarget, type AgendaTarget } from '../notifications/agendaTarget';
 import { obterAgenda } from '../services/agenda';
 import { listarAvisos } from '../services/avisos';
-import type { Aluno } from '../services/types';
+import { toApiError } from '../services/errors';
+import { apagarRecado } from '../services/recados';
+import type { Aluno, Recado } from '../services/types';
 import { colors, radius, spacing, typography } from '../theme';
 import { addDaysISO, firstName, formatDateLong, todayISO } from '../utils/format';
 
@@ -83,6 +86,35 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
   }, []);
   const ciencia = useConfirmarCiencia(onConfirmada);
 
+  // Recados: enviar, editar e apagar os próprios (dentro de `editavel_ate`) sem sair da Agenda.
+  const [recadoAberto, setRecadoAberto] = useState(false);
+  const [recadoEmEdicao, setRecadoEmEdicao] = useState<Recado | null>(null);
+  const [apagando, setApagando] = useState(false);
+  const [avisoRecado, setAvisoRecado] = useState<string | null>(null);
+
+  function confirmarExclusaoRecado(recado: Recado) {
+    Alert.alert('Apagar recado?', 'O recado será removido e o professor deixará de vê-lo.', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Apagar',
+        style: 'destructive',
+        onPress: async () => {
+          setApagando(true);
+          setAvisoRecado(null);
+          try {
+            await apagarRecado(recado.id);
+          } catch (err) {
+            // 403 (não é seu) ou 422 (passou do prazo): a mensagem vem do backend.
+            setAvisoRecado(toApiError(err).message);
+          } finally {
+            setApagando(false);
+            reload();
+          }
+        },
+      },
+    ]);
+  }
+
   const agenda = data?.agenda ?? null;
   // Agenda "só de recado" (sem blocos) não exige ciência: o backend não a lista como pendente nem envia push.
   const exigeCiencia = agenda !== null && !agendaSemBlocos(agenda);
@@ -135,7 +167,16 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
         <>
           {cienteAgora ? <Notice tone="success" message="Ciência confirmada. Obrigado!" /> : null}
           {agenda && !agendaSemConteudo(agenda) ? (
-            <AgendaDoDia agenda={agenda} />
+            <AgendaDoDia
+              agenda={agenda}
+              busy={apagando}
+              onEditRecado={(recado) => {
+                setAvisoRecado(null);
+                setRecadoEmEdicao(recado);
+                setRecadoAberto(true);
+              }}
+              onDeleteRecado={confirmarExclusaoRecado}
+            />
           ) : (
             <View style={styles.vazio}>
               <Mascote size={30} segments={3} />
@@ -150,6 +191,18 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
               />
             </View>
           )}
+          {avisoRecado ? <Notice message={avisoRecado} /> : null}
+          {isToday ? (
+            <Button
+              title="Enviar recado ao professor"
+              variant="outline"
+              onPress={() => {
+                setAvisoRecado(null);
+                setRecadoEmEdicao(null);
+                setRecadoAberto(true);
+              }}
+            />
+          ) : null}
           <AvisosList avisos={data.avisos} />
           {/* Fallback para quem dispensou o pop-up (agenda longa); a curta usa a barra fixa. */}
           {pendente && !fim.cabeNaTela ? (
@@ -158,6 +211,19 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
           {pendente && !fim.cabeNaTela && ciencia.error && !sheetAberto ? <Notice message={ciencia.error} /> : null}
         </>
       ) : null}
+
+      <NovoItemSheet
+        key={recadoEmEdicao?.id ?? 'novo'}
+        modo="recado"
+        visible={recadoAberto}
+        aluno={aluno}
+        recado={recadoEmEdicao}
+        onClose={() => setRecadoAberto(false)}
+        onSent={() => {
+          setRecadoAberto(false);
+          reload();
+        }}
+      />
 
       <CienciaSheet
         visible={sheetAberto}

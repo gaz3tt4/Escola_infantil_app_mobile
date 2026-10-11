@@ -17,6 +17,12 @@ export function formatDateLong(isoDate: string): string {
 
 /** Data e hora ISO 8601 → "dd/mm/aaaa às hh:mm" no fuso do aparelho. */
 export function formatDateTimeBR(iso: string): string {
+  // A API manda America/Sao_Paulo com offset (-03:00): mostra o horário da escola, não o do aparelho.
+  const saoPaulo = iso.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::\d{2}(?:\.\d+)?)?-03:?00$/);
+  if (saoPaulo) {
+    const [, ano, mes, dia, hora, minuto] = saoPaulo;
+    return `${dia}/${mes}/${ano} às ${hora}:${minuto}`;
+  }
   const date = new Date(iso.includes('T') ? iso : iso.replace(' ', 'T'));
   if (Number.isNaN(date.getTime())) return iso;
   return `${toLocalISO(date).split('-').reverse().join('/')} às ${pad(date.getHours())}:${pad(date.getMinutes())}`;

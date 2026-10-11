@@ -4,7 +4,6 @@ import { StyleSheet, Text } from 'react-native';
 import { ReceitaPicker } from './ReceitaPicker';
 import { BottomSheet } from '../ui/BottomSheet';
 import { Button } from '../ui/Button';
-import { ChipSelector } from '../ui/ChipSelector';
 import { Notice } from '../ui/Notice';
 import { TextField } from '../ui/TextField';
 import { toApiError } from '../../services/errors';
@@ -17,6 +16,8 @@ import { formatDateBR, formatDateTimeBR, maskDateBR, parseDateBR, todayISO } fro
 type Aba = 'recado' | 'medicamento';
 
 interface NovoItemSheetProps {
+  /** O que o formulário envia: recado ao professor (Agenda) ou medicamento (aba Medicamentos). */
+  modo: Aba;
   visible: boolean;
   aluno: Aluno;
   /** Medicamento em edição; use `key` para reiniciar o formulário ao trocar. */
@@ -41,11 +42,11 @@ function hoje(): string {
   return `${dia}/${mes}/${ano}`;
 }
 
-/** Bottom sheet com duas abas: recado ao professor e medicamento (com receita obrigatória). */
-export function NovoItemSheet({ visible, aluno, medicamento, recado, onClose, onSent }: NovoItemSheetProps) {
+/** Formulário em bottom sheet: recado ao professor ou medicamento (com receita obrigatória). */
+export function NovoItemSheet({ modo, visible, aluno, medicamento, recado, onClose, onSent }: NovoItemSheetProps) {
   const edicao = medicamento ?? null;
   const recadoEdicao = recado ?? null;
-  const [aba, setAba] = useState<Aba>(edicao ? 'medicamento' : 'recado');
+  const aba = modo;
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -148,7 +149,7 @@ export function NovoItemSheet({ visible, aluno, medicamento, recado, onClose, on
   return (
     <BottomSheet
       visible={visible}
-      title={edicao ? 'Editar medicamento' : recadoEdicao ? 'Editar recado' : 'Enviar à escola'}
+      title={edicao ? 'Editar medicamento' : recadoEdicao ? 'Editar recado' : modo === 'recado' ? 'Recado ao professor' : 'Informar medicamento'}
       subtitle={
         edicao
           ? edicao.editavel_ate
@@ -162,21 +163,6 @@ export function NovoItemSheet({ visible, aluno, medicamento, recado, onClose, on
       }
       onClose={fechar}
     >
-      {edicao || recadoEdicao ? null : (
-      <ChipSelector<Aba>
-        scroll={false}
-        options={[
-          { value: 'recado', label: 'Recado' },
-          { value: 'medicamento', label: 'Medicamento' },
-        ]}
-        value={aba}
-        onChange={(valor) => {
-          setAba(valor);
-          setFormError(null);
-        }}
-      />
-      )}
-
       {aba === 'recado' ? (
         <>
           <TextField

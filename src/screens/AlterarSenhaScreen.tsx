@@ -113,6 +113,10 @@ export function AlterarSenhaScreen() {
         </View>
       ) : (
         <View style={styles.form}>
+          <Notice
+            tone="info"
+            message={`Regras da nova senha: mínimo de ${MIN_LENGTH} caracteres e diferente da senha atual.`}
+          />
           <TextField
             label={forced ? 'Senha provisória' : 'Senha atual'}
             password

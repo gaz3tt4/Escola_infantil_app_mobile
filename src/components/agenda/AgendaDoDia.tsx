@@ -12,7 +12,7 @@ import {
 import { Card } from '../ui/Card';
 import { Pill } from '../ui/Pill';
 import { RecadoItem } from '../recados/RecadoItem';
-import type { Agenda, RefeicaoAgenda, SonecaAgenda } from '../../services/types';
+import type { Agenda, Recado, RefeicaoAgenda, SonecaAgenda } from '../../services/types';
 import { colors, spacing } from '../../theme';
 
 function minutos(hora: string): number | null {
@@ -110,7 +110,14 @@ export function agendaSemConteudo(agenda: Agenda): boolean {
 }
 
 /** Blocos da agenda do dia. Só renderiza o que o backend devolveu (evacuação e xixi vêm só no berçário). */
-export function AgendaDoDia({ agenda }: { agenda: Agenda }) {
+interface AgendaDoDiaProps {
+  agenda: Agenda;
+  onEditRecado?: (recado: Recado) => void;
+  onDeleteRecado?: (recado: Recado) => void;
+  busy?: boolean;
+}
+
+export function AgendaDoDia({ agenda, onEditRecado, onDeleteRecado, busy }: AgendaDoDiaProps) {
   const semBlocos = agendaSemBlocos(agenda);
   return (
     <View style={styles.container}>
@@ -118,6 +125,8 @@ export function AgendaDoDia({ agenda }: { agenda: Agenda }) {
         <Text style={styles.cabecalhoTitulo}>Agenda do dia</Text>
         {semBlocos ? null : <Pill label={segmentoLabels[agenda.segmento]} bg={colors.brandSoft} fg={colors.brandDark} />}
       </View>
+
+      {semBlocos ? <Text style={styles.legenda}>O relatório do dia (refeições, sonecas) ainda não foi lançado.</Text> : null}
 
       {agenda.atividades ? (
         <Bloco icon="🎨" titulo="Atividades do dia">
@@ -173,7 +182,7 @@ export function AgendaDoDia({ agenda }: { agenda: Agenda }) {
         <View style={styles.recados}>
           <Text style={styles.cabecalhoTitulo}>Recados do dia</Text>
           {agenda.recados.map((recado) => (
-            <RecadoItem key={recado.id} recado={recado} />
+            <RecadoItem key={recado.id} recado={recado} busy={busy} onEdit={onEditRecado} onDelete={onDeleteRecado} />
           ))}
         </View>
       ) : null}
@@ -230,6 +239,10 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   linhaDetalhe: {
+    fontSize: 13,
+    color: colors.textSecondary,
+  },
+  legenda: {
     fontSize: 13,
     color: colors.textSecondary,
   },

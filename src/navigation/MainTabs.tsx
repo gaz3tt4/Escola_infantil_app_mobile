@@ -5,7 +5,7 @@ import { Text } from 'react-native';
 import { AgendaScreen } from '../screens/AgendaScreen';
 import { PagamentosScreen } from '../screens/PagamentosScreen';
 import { PerfilScreen } from '../screens/PerfilScreen';
-import { RecadosScreen } from '../screens/RecadosScreen';
+import { MedicamentosScreen } from '../screens/MedicamentosScreen';
 import { usePendencias } from '../context/PendenciasContext';
 import { colors } from '../theme';
 import type { MainTabParamList } from './types';
@@ -14,7 +14,7 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 const TAB_ICONS: Record<keyof MainTabParamList, string> = {
   Agenda: '🗓️',
-  Recados: '💌',
+  Medicamentos: '💊',
   Perfil: '🧒',
   Pagamentos: '💳',
 };
@@ -52,7 +52,7 @@ export function MainTabs() {
           tabBarBadgeStyle: { backgroundColor: colors.coral, color: colors.surface },
         }}
       />
-      <Tab.Screen name="Recados" component={RecadosScreen} />
+      <Tab.Screen name="Medicamentos" component={MedicamentosScreen} />
       <Tab.Screen name="Perfil" component={PerfilScreen} />
       <Tab.Screen name="Pagamentos" component={PagamentosScreen} />
     </Tab.Navigator>
