@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { AlunoSwitcher, useAlunosGate } from '../components/AlunoSwitcher';
-import { AgendaDoDia, agendaVazia } from '../components/agenda/AgendaDoDia';
+import { AgendaDoDia, agendaSemBlocos, agendaSemConteudo } from '../components/agenda/AgendaDoDia';
 import { AvisosList } from '../components/agenda/AvisosList';
 import { CienciaBarra, CienciaSheet } from '../components/agenda/CienciaSheet';
 import { Button } from '../components/ui/Button';
@@ -84,8 +84,10 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
   const ciencia = useConfirmarCiencia(onConfirmada);
 
   const agenda = data?.agenda ?? null;
-  const pendente = agenda !== null && !agenda.ciente && !confirmadas.has(agenda.id);
-  const cienteAgora = agenda !== null && (agenda.ciente || confirmadas.has(agenda.id));
+  // Agenda "só de recado" (sem blocos) não exige ciência: o backend não a lista como pendente nem envia push.
+  const exigeCiencia = agenda !== null && !agendaSemBlocos(agenda);
+  const pendente = exigeCiencia && !agenda.ciente && !confirmadas.has(agenda.id);
+  const cienteAgora = exigeCiencia && (agenda.ciente || confirmadas.has(agenda.id));
   const sheetAberto = pendente && fim.chegouAoFim && dispensada !== agenda.id;
   const confirmar = () => {
     if (agenda) void ciencia.confirmar(agenda.id);
@@ -132,7 +134,7 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
       {data ? (
         <>
           {cienteAgora ? <Notice tone="success" message="Ciência confirmada. Obrigado!" /> : null}
-          {agenda && !agendaVazia(agenda) ? (
+          {agenda && !agendaSemConteudo(agenda) ? (
             <AgendaDoDia agenda={agenda} />
           ) : (
             <View style={styles.vazio}>

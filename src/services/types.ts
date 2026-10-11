@@ -181,6 +181,10 @@ export interface Agenda {
   mamadeiras: MamadeiraAgenda[];
   evacuacao: EvacuacaoAgenda | null;
   xixi: XixiAgenda | null;
+  /** Atividades do dia da turma (texto do professor), ou null. */
+  atividades: string | null;
+  /** Recados do dia visíveis ao responsável (professor/admin e os próprios); sem atividades. */
+  recados: Recado[];
   /** Ciência do responsável; o backend devolve false/null até a etapa de ciência. */
   ciente: boolean;
   ciente_em: string | null;

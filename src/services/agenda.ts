@@ -24,5 +24,7 @@ export async function obterAgenda(alunoId: number, data: string): Promise<Agenda
     mamadeiras: agenda.mamadeiras ?? [],
     evacuacao: agenda.evacuacao ?? null,
     xixi: agenda.xixi ?? null,
+    atividades: agenda.atividades ?? null,
+    recados: agenda.recados ?? [],
   };
 }

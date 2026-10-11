@@ -11,6 +11,7 @@ import {
 } from './labels';
 import { Card } from '../ui/Card';
 import { Pill } from '../ui/Pill';
+import { RecadoItem } from '../recados/RecadoItem';
 import type { Agenda, RefeicaoAgenda, SonecaAgenda } from '../../services/types';
 import { colors, spacing } from '../../theme';
 
@@ -92,8 +93,8 @@ function Soneca({ soneca }: { soneca: SonecaAgenda }) {
   return <Linha titulo={periodo} detalhe={total} />;
 }
 
-/** true quando a agenda existe mas não tem nenhum bloco preenchido. */
-export function agendaVazia(agenda: Agenda): boolean {
+/** true quando a agenda não tem nenhum bloco (refeições, sonecas, mamadeiras, evacuação, xixi). */
+export function agendaSemBlocos(agenda: Agenda): boolean {
   return (
     agenda.refeicoes.length === 0 &&
     agenda.sonecas.length === 0 &&
@@ -103,14 +104,26 @@ export function agendaVazia(agenda: Agenda): boolean {
   );
 }
 
+/** true quando não há nada para mostrar: nem blocos, nem atividades, nem recados. */
+export function agendaSemConteudo(agenda: Agenda): boolean {
+  return agendaSemBlocos(agenda) && !agenda.atividades && agenda.recados.length === 0;
+}
+
 /** Blocos da agenda do dia. Só renderiza o que o backend devolveu (evacuação e xixi vêm só no berçário). */
 export function AgendaDoDia({ agenda }: { agenda: Agenda }) {
+  const semBlocos = agendaSemBlocos(agenda);
   return (
     <View style={styles.container}>
       <View style={styles.cabecalho}>
         <Text style={styles.cabecalhoTitulo}>Agenda do dia</Text>
-        <Pill label={segmentoLabels[agenda.segmento]} bg={colors.brandSoft} fg={colors.brandDark} />
+        {semBlocos ? null : <Pill label={segmentoLabels[agenda.segmento]} bg={colors.brandSoft} fg={colors.brandDark} />}
       </View>
+
+      {agenda.atividades ? (
+        <Bloco icon="🎨" titulo="Atividades do dia">
+          <Text style={styles.atividades}>{agenda.atividades}</Text>
+        </Bloco>
+      ) : null}
 
       {agenda.refeicoes.length > 0 ? (
         <Bloco icon="🍽️" titulo="Refeições">
@@ -154,6 +167,15 @@ export function AgendaDoDia({ agenda }: { agenda: Agenda }) {
             observacao={agenda.xixi.observacao}
           />
         </Bloco>
+      ) : null}
+
+      {agenda.recados.length > 0 ? (
+        <View style={styles.recados}>
+          <Text style={styles.cabecalhoTitulo}>Recados do dia</Text>
+          {agenda.recados.map((recado) => (
+            <RecadoItem key={recado.id} recado={recado} />
+          ))}
+        </View>
       ) : null}
     </View>
   );
@@ -210,6 +232,14 @@ const styles = StyleSheet.create({
   linhaDetalhe: {
     fontSize: 13,
     color: colors.textSecondary,
+  },
+  atividades: {
+    fontSize: 14,
+    color: colors.textPrimary,
+    lineHeight: 20,
+  },
+  recados: {
+    gap: spacing.sm,
   },
   observacao: {
     fontSize: 13,
