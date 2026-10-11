@@ -13,13 +13,22 @@ export class ApiError extends Error {
   readonly status: number | null;
   /** Erros de validação por campo (422), com a primeira mensagem de cada. */
   readonly fieldErrors: Record<string, string>;
+  /** Código de negócio do backend (ex.: `senha_padrao`), quando houver. */
+  readonly code: string | null;
 
-  constructor(params: { kind: ApiErrorKind; message: string; status?: number | null; fieldErrors?: Record<string, string> }) {
+  constructor(params: {
+    kind: ApiErrorKind;
+    message: string;
+    status?: number | null;
+    fieldErrors?: Record<string, string>;
+    code?: string | null;
+  }) {
     super(params.message);
     this.name = 'ApiError';
     this.kind = params.kind;
     this.status = params.status ?? null;
     this.fieldErrors = params.fieldErrors ?? {};
+    this.code = params.code ?? null;
   }
 }
 
@@ -78,7 +87,8 @@ export function toApiError(error: unknown): ApiError {
       const status = error.response.status;
       const body = isLaravelErrorBody(error.response.data) ? error.response.data : null;
       const fieldErrors = firstFieldErrors(body?.errors);
-      return new ApiError({ kind: 'http', status, fieldErrors, message: messageForStatus(status, body, fieldErrors) });
+      const code = typeof body?.code === 'string' ? body.code : null;
+      return new ApiError({ kind: 'http', status, fieldErrors, code, message: messageForStatus(status, body, fieldErrors) });
     }
     if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
       return new ApiError({ kind: 'timeout', message: 'O servidor demorou para responder. Tente novamente.' });
@@ -92,6 +102,11 @@ export function toApiError(error: unknown): ApiError {
 /** Mensagem amigável para exibir na tela a partir de qualquer erro. */
 export function errorMessage(error: unknown): string {
   return toApiError(error).message;
+}
+
+/** 403 `senha_padrao`: o usuário precisa trocar a senha provisória antes de usar a API. */
+export function isPasswordChangeRequired(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 403 && error.code === 'senha_padrao';
 }
 
 export function isHttpStatus(error: unknown, status: number): boolean {

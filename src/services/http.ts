@@ -1,8 +1,8 @@
 import { create, type AxiosError } from 'axios';
 
 import { API_URL, REQUEST_TIMEOUT_MS } from './config';
-import { ApiError, toApiError } from './errors';
-import { clearSession, getToken } from './session';
+import { ApiError, isPasswordChangeRequired, toApiError } from './errors';
+import { clearSession, getToken, setMustChangePassword } from './session';
 
 /**
  * Cliente HTTP único da API. Envia sempre `Accept: application/json`: sem ele o
@@ -47,6 +47,16 @@ export function setSessionEndedHandler(handler: SessionEndedHandler | null) {
   sessionEndedHandler = handler;
 }
 
+// ---------- Troca de senha obrigatória ----------
+
+type PasswordRequiredHandler = () => void;
+let passwordRequiredHandler: PasswordRequiredHandler | null = null;
+
+/** Registrado pelo AuthContext para levar o usuário à tela de troca quando o servidor exigir. */
+export function setPasswordRequiredHandler(handler: PasswordRequiredHandler | null) {
+  passwordRequiredHandler = handler;
+}
+
 // O 403 da policy (ex.: aluno de outro responsável) não deve derrubar a sessão;
 // só o 403 do middleware `ativo` (acesso desativado pelo admin).
 function isAccessDisabled(error: ApiError): boolean {
@@ -58,6 +68,14 @@ http.interceptors.response.use(
   async (rawError: AxiosError | ApiError) => {
     const error = toApiError(rawError);
     const sentToken = !(rawError instanceof ApiError) && !!rawError.config?.headers?.Authorization;
+
+    // 403 `senha_padrao`: a sessão é válida; só falta trocar a senha provisória (a flag local pode
+    // estar desatualizada, por exemplo depois de o admin redefinir a senha). Não derruba a sessão.
+    if (sentToken && isPasswordChangeRequired(error)) {
+      await setMustChangePassword(true);
+      passwordRequiredHandler?.();
+      return Promise.reject(error);
+    }
 
     if (sentToken && (error.status === 401 || isAccessDisabled(error))) {
       await clearSession();

@@ -3,7 +3,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import * as authService from '../services/auth';
 import { registrarDispositivoPush, removerDispositivoPush } from '../services/push';
 import { toApiError } from '../services/errors';
-import { setSessionEndedHandler } from '../services/http';
+import { setPasswordRequiredHandler, setSessionEndedHandler } from '../services/http';
 import { getMustChangePassword, getToken } from '../services/session';
 import type { TrocarSenhaRequest } from '../services/types';
 
@@ -70,6 +70,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setNotice(message);
     });
     return () => setSessionEndedHandler(null);
+  }, []);
+
+  // O servidor exigiu a troca da senha provisória (403 `senha_padrao`): o navegador passa para a tela de troca.
+  useEffect(() => {
+    setPasswordRequiredHandler(() => setMustChangePassword(true));
+    return () => setPasswordRequiredHandler(null);
   }, []);
 
   useEffect(() => {

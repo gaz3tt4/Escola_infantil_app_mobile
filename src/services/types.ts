@@ -270,5 +270,7 @@ export interface DataEnvelope<T> {
 /** Corpo de erro do Laravel (422 traz `errors` por campo). */
 export interface LaravelErrorBody {
   message?: string;
+  /** Código de negócio do backend (ex.: `senha_padrao`: troca de senha obrigatória pendente). */
+  code?: string;
   errors?: Record<string, string[]>;
 }
