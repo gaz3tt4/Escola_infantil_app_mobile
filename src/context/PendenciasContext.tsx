@@ -1,8 +1,8 @@
-import * as Notifications from 'expo-notifications';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { AppState } from 'react-native';
 
 import { removerNotificacoesDaAgenda } from '../notifications/config';
+import { obterNotificacoes } from '../notifications/modulo';
 import { listarAgendasPendentes } from '../services/ciencia';
 import type { AgendaPendente } from '../services/types';
 
@@ -40,20 +40,25 @@ export function PendenciasProvider({ children }: { children: React.ReactNode }) 
     const appState = AppState.addEventListener('change', (state) => {
       if (state === 'active') reload();
     });
-    const recebida = Notifications.addNotificationReceivedListener(() => reload());
+    // Sem push (Expo Go Android) só o retorno ao primeiro plano atualiza o indicador.
+    const recebida = obterNotificacoes()?.addNotificationReceivedListener(() => reload());
     return () => {
       appState.remove();
-      recebida.remove();
+      recebida?.remove();
     };
   }, [reload]);
 
   // Contagem no ícone do app; zera ao sair da área autenticada.
   useEffect(() => {
-    Notifications.setBadgeCountAsync(pendentes.length).catch(() => undefined);
+    obterNotificacoes()
+      ?.setBadgeCountAsync(pendentes.length)
+      .catch(() => undefined);
   }, [pendentes.length]);
   useEffect(
     () => () => {
-      Notifications.setBadgeCountAsync(0).catch(() => undefined);
+      obterNotificacoes()
+        ?.setBadgeCountAsync(0)
+        .catch(() => undefined);
     },
     []
   );

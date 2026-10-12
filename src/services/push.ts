@@ -1,9 +1,9 @@
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
-import * as Notifications from 'expo-notifications';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
+import { obterNotificacoes, pushDisponivel } from '../notifications/modulo';
 import { http } from './http';
 import type { DispositivoPushRequest, PlataformaPush } from './types';
 
@@ -20,7 +20,8 @@ function plataforma(): PlataformaPush | null {
  * Google Play, permissão negada, projectId ausente). Nunca lança: push é um extra.
  */
 async function obterTokenExpo(): Promise<string | null> {
-  if (!plataforma() || !Device.isDevice) return null;
+  const Notifications = obterNotificacoes();
+  if (!Notifications || !plataforma() || !Device.isDevice) return null;
 
   try {
     // Android 13+: o prompt de permissão só aparece depois de existir um canal.
@@ -56,7 +57,7 @@ async function obterTokenExpo(): Promise<string | null> {
 /** POST /dispositivos-push (upsert por token). Silencioso em qualquer falha. */
 export async function registrarDispositivoPush(): Promise<void> {
   const os = plataforma();
-  if (!os) return;
+  if (!os || !pushDisponivel()) return;
   const token = await obterTokenExpo();
   if (!token) return;
 
@@ -71,6 +72,8 @@ export async function registrarDispositivoPush(): Promise<void> {
 
 /** DELETE /dispositivos-push. Chamar ANTES do logout (a rota exige o Bearer). */
 export async function removerDispositivoPush(): Promise<void> {
+  // Expo Go Android nunca registra token, então não há o que remover.
+  if (!pushDisponivel()) return;
   try {
     const token = await SecureStore.getItemAsync(PUSH_TOKEN_KEY);
     if (!token) return;
@@ -83,6 +86,9 @@ export async function removerDispositivoPush(): Promise<void> {
 
 /** Reenvia o token quando o sistema o troca (rotação). */
 export function assinarRotacaoDoToken(): { remove: () => void } {
+  const Notifications = obterNotificacoes();
+  if (!Notifications) return { remove: () => undefined };
+
   const subscription = Notifications.addPushTokenListener(() => {
     void registrarDispositivoPush();
   });

@@ -1,4 +1,4 @@
-import * as Notifications from 'expo-notifications';
+import { obterNotificacoes } from './modulo';
 
 /**
  * Notificação recebida com o app aberto: mostra o banner e toca o som, sem mexer no badge
@@ -6,6 +6,9 @@ import * as Notifications from 'expo-notifications';
  * Chamado uma vez, no carregamento do app.
  */
 export function configurarNotificacoes() {
+  const Notifications = obterNotificacoes();
+  if (!Notifications) return;
+
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
       shouldShowBanner: true,
@@ -18,6 +21,10 @@ export function configurarNotificacoes() {
 
 /** Remove da bandeja as notificações apresentadas da agenda indicada. */
 export async function removerNotificacoesDaAgenda(agendaId: number): Promise<void> {
+  // Sem push (Expo Go Android) não há notificação apresentada para remover; a ciência segue normal.
+  const Notifications = obterNotificacoes();
+  if (!Notifications) return;
+
   try {
     const apresentadas = await Notifications.getPresentedNotificationsAsync();
     await Promise.all(

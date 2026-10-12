@@ -1,10 +1,11 @@
-import * as Notifications from 'expo-notifications';
+import type { NotificationResponse } from 'expo-notifications';
 import { useEffect } from 'react';
 
 import { useAuth } from '../context/AuthContext';
 import { abrirAgenda } from '../navigation/ref';
 import { assinarRotacaoDoToken } from '../services/push';
 import { parseAgendaPush, setAgendaTarget } from './agendaTarget';
+import { obterNotificacoes } from './modulo';
 
 /**
  * Liga o push ao app enquanto há sessão ativa: toque na notificação abre a Agenda na data
@@ -16,9 +17,11 @@ export function NotificationsBridge() {
   const ativo = status === 'signedIn' && !mustChangePassword;
 
   useEffect(() => {
-    if (!ativo) return;
+    // Sem push (Expo Go Android) não há listener a registrar.
+    const Notifications = obterNotificacoes();
+    if (!ativo || !Notifications) return;
 
-    function tratar(resposta: Notifications.NotificationResponse) {
+    function tratar(resposta: NotificationResponse) {
       const alvo = parseAgendaPush(resposta.notification.request.content.data);
       if (!alvo) return;
       setAgendaTarget(alvo);
