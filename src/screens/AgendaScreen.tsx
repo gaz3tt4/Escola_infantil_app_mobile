@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { AlunoSwitcher, useAlunosGate } from '../components/AlunoSwitcher';
-import { AgendaDoDia, agendaSemBlocos, agendaSemConteudo } from '../components/agenda/AgendaDoDia';
+import { AgendaDoDia, agendaSemBlocos, agendaSemConteudo, RefeicoesBloco } from '../components/agenda/AgendaDoDia';
 import { AvisosList } from '../components/agenda/AvisosList';
 import { CienciaBarra, CienciaSheet } from '../components/agenda/CienciaSheet';
 import { NovoItemSheet } from '../components/recados/NovoItemSheet';
@@ -18,7 +18,7 @@ import { useAsyncResource } from '../hooks/useAsyncResource';
 import { useConfirmarCiencia } from '../hooks/useConfirmarCiencia';
 import { useFimDaPagina } from '../hooks/useFimDaPagina';
 import { clearAgendaTarget, useAgendaTarget, type AgendaTarget } from '../notifications/agendaTarget';
-import { obterAgenda } from '../services/agenda';
+import { obterAgenda, temCardapio } from '../services/agenda';
 import { listarAvisos } from '../services/avisos';
 import { toApiError } from '../services/errors';
 import { apagarRecado } from '../services/recados';
@@ -72,7 +72,7 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
         obterAgenda(aluno.id, date),
         // Falha nos avisos não derruba a agenda.
         listarAvisos(aluno.id, date).catch(() => []),
-      ]).then(([agenda, avisos]) => ({ agenda, avisos })),
+      ]).then(([{ agenda, cardapio }, avisos]) => ({ agenda, cardapio, avisos })),
     [aluno.id, date]
   );
   const { data, error, isLoading, isRefreshing, reload } = useAsyncResource(loader);
@@ -166,9 +166,10 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
       {data ? (
         <>
           {cienteAgora ? <Notice tone="success" message="Ciência confirmada. Obrigado!" /> : null}
-          {agenda && !agendaSemConteudo(agenda) ? (
+          {agenda && !agendaSemConteudo(agenda, data.cardapio) ? (
             <AgendaDoDia
               agenda={agenda}
+              cardapio={data.cardapio}
               busy={apagando}
               onEditRecado={(recado) => {
                 setAvisoRecado(null);
@@ -177,6 +178,11 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
               }}
               onDeleteRecado={confirmarExclusaoRecado}
             />
+          ) : !agenda && temCardapio(data.cardapio) ? (
+            <View style={styles.semAgenda}>
+              <Text style={styles.legenda}>A professora ainda não lançou a agenda deste dia. Veja o cardápio:</Text>
+              <RefeicoesBloco refeicoes={[]} cardapio={data.cardapio} />
+            </View>
           ) : (
             <View style={styles.vazio}>
               <Mascote size={30} segments={3} />
@@ -242,6 +248,13 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
 const styles = StyleSheet.create({
   header: {
     gap: spacing.sm,
+  },
+  semAgenda: {
+    gap: spacing.md,
+  },
+  legenda: {
+    fontSize: 13,
+    color: colors.textSecondary,
   },
   vazio: {
     alignItems: 'center',

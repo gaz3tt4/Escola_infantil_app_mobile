@@ -18,6 +18,9 @@ export const refeicaoLabels: Record<TipoRefeicao, string> = {
   jantar: 'Jantar',
 };
 
+/** Ordem das refeições ao longo do dia. */
+export const ordemRefeicoes: TipoRefeicao[] = ['lanche_manha', 'almoco', 'lanche_tarde', 'jantar'];
+
 export const refeicaoIcons: Record<TipoRefeicao, string> = {
   lanche_manha: '🍎',
   almoco: '🍽️',

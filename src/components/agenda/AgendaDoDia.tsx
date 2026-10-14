@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import {
   aceitacaoLabels,
   evacuacaoLabels,
+  ordemRefeicoes,
   refeicaoIcons,
   refeicaoLabels,
   segmentoLabels,
@@ -12,7 +13,8 @@ import {
 import { Card } from '../ui/Card';
 import { Pill } from '../ui/Pill';
 import { RecadoItem } from '../recados/RecadoItem';
-import type { Agenda, Recado, RefeicaoAgenda, SonecaAgenda } from '../../services/types';
+import { temCardapio } from '../../services/agenda';
+import type { Agenda, Cardapio, Recado, RefeicaoAgenda, SonecaAgenda, TipoRefeicao } from '../../services/types';
 import { colors, spacing } from '../../theme';
 
 function minutos(hora: string): number | null {
@@ -57,17 +59,24 @@ function Linha({ titulo, detalhe, observacao }: { titulo: string; detalhe?: stri
   );
 }
 
-function Refeicao({ refeicao }: { refeicao: RefeicaoAgenda }) {
-  const aceitacao = refeicao.aceitacao ? aceitacaoLabels[refeicao.aceitacao] : undefined;
-  const recusou = refeicao.aceitacao === 'recusou';
+/** Uma refeição: o que o professor registrou (se já registrou) e o cardápio do dia. */
+function Refeicao({ tipo, refeicao, cardapio }: { tipo: TipoRefeicao; refeicao?: RefeicaoAgenda; cardapio: string[] }) {
+  const aceitacao = refeicao?.aceitacao ? aceitacaoLabels[refeicao.aceitacao] : undefined;
+  const recusou = refeicao?.aceitacao === 'recusou';
   return (
     <View style={styles.linha}>
       <View style={styles.linhaTopo}>
         <Text style={styles.linhaTitulo}>
-          {refeicaoIcons[refeicao.tipo] ?? '🍽️'} {refeicaoLabels[refeicao.tipo] ?? 'Refeição'}
+          {refeicaoIcons[tipo] ?? '🍽️'} {refeicaoLabels[tipo] ?? 'Refeição'}
         </Text>
-        {refeicao.horario ? <Text style={styles.linhaDetalhe}>{refeicao.horario}</Text> : null}
+        {refeicao?.horario ? <Text style={styles.linhaDetalhe}>{refeicao.horario}</Text> : null}
       </View>
+      {cardapio.length > 0 ? (
+        <Text style={styles.cardapio}>
+          <Text style={styles.cardapioRotulo}>Cardápio: </Text>
+          {cardapio.join(', ')}
+        </Text>
+      ) : null}
       {aceitacao ? (
         <Pill
           label={aceitacao}
@@ -75,11 +84,35 @@ function Refeicao({ refeicao }: { refeicao: RefeicaoAgenda }) {
           fg={recusou ? '#B23A2C' : colors.brandDark}
         />
       ) : null}
-      {recusou && refeicao.alimento_recusado ? (
+      {recusou && refeicao?.alimento_recusado ? (
         <Text style={styles.observacao}>Alimento recusado: {refeicao.alimento_recusado}</Text>
       ) : null}
-      {refeicao.observacao ? <Text style={styles.observacao}>{refeicao.observacao}</Text> : null}
+      {refeicao?.observacao ? <Text style={styles.observacao}>{refeicao.observacao}</Text> : null}
     </View>
+  );
+}
+
+/**
+ * Refeições do dia: cada uma com o cardápio e o registro do professor. A refeição que está no
+ * cardápio mas ainda não foi registrada aparece mesmo assim, só com o cardápio.
+ */
+export function RefeicoesBloco({ refeicoes, cardapio }: { refeicoes: RefeicaoAgenda[]; cardapio: Cardapio }) {
+  const tipos = ordemRefeicoes.filter((tipo) => cardapio[tipo].length > 0 || refeicoes.some((r) => r.tipo === tipo));
+  const outras = refeicoes.filter((r) => !ordemRefeicoes.includes(r.tipo));
+  if (tipos.length === 0 && outras.length === 0) return null;
+
+  return (
+    <Bloco icon="🍽️" titulo="Refeições">
+      {tipos.flatMap((tipo) => {
+        const registradas = refeicoes.filter((r) => r.tipo === tipo);
+        return registradas.length > 0
+          ? registradas.map((r) => <Refeicao key={r.id} tipo={tipo} refeicao={r} cardapio={cardapio[tipo]} />)
+          : [<Refeicao key={tipo} tipo={tipo} cardapio={cardapio[tipo]} />];
+      })}
+      {outras.map((r) => (
+        <Refeicao key={r.id} tipo={r.tipo} refeicao={r} cardapio={[]} />
+      ))}
+    </Bloco>
   );
 }
 
@@ -104,20 +137,21 @@ export function agendaSemBlocos(agenda: Agenda): boolean {
   );
 }
 
-/** true quando não há nada para mostrar: nem blocos, nem atividades, nem recados. */
-export function agendaSemConteudo(agenda: Agenda): boolean {
-  return agendaSemBlocos(agenda) && !agenda.atividades && agenda.recados.length === 0;
+/** true quando não há nada para mostrar: nem blocos, nem atividades, nem recados, nem cardápio. */
+export function agendaSemConteudo(agenda: Agenda, cardapio: Cardapio): boolean {
+  return agendaSemBlocos(agenda) && !agenda.atividades && agenda.recados.length === 0 && !temCardapio(cardapio);
 }
 
 /** Blocos da agenda do dia. Só renderiza o que o backend devolveu (evacuação e xixi vêm só no berçário). */
 interface AgendaDoDiaProps {
   agenda: Agenda;
+  cardapio: Cardapio;
   onEditRecado?: (recado: Recado) => void;
   onDeleteRecado?: (recado: Recado) => void;
   busy?: boolean;
 }
 
-export function AgendaDoDia({ agenda, onEditRecado, onDeleteRecado, busy }: AgendaDoDiaProps) {
+export function AgendaDoDia({ agenda, cardapio, onEditRecado, onDeleteRecado, busy }: AgendaDoDiaProps) {
   const semBlocos = agendaSemBlocos(agenda);
   return (
     <View style={styles.container}>
@@ -134,13 +168,7 @@ export function AgendaDoDia({ agenda, onEditRecado, onDeleteRecado, busy }: Agen
         </Bloco>
       ) : null}
 
-      {agenda.refeicoes.length > 0 ? (
-        <Bloco icon="🍽️" titulo="Refeições">
-          {agenda.refeicoes.map((refeicao) => (
-            <Refeicao key={refeicao.id} refeicao={refeicao} />
-          ))}
-        </Bloco>
-      ) : null}
+      <RefeicoesBloco refeicoes={agenda.refeicoes} cardapio={cardapio} />
 
       {agenda.sonecas.length > 0 ? (
         <Bloco icon="😴" titulo="Sonecas">
@@ -245,6 +273,15 @@ const styles = StyleSheet.create({
   legenda: {
     fontSize: 13,
     color: colors.textSecondary,
+  },
+  cardapio: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    lineHeight: 18,
+  },
+  cardapioRotulo: {
+    fontWeight: '700',
+    color: colors.brandDark,
   },
   atividades: {
     fontSize: 14,

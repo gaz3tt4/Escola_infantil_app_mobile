@@ -171,6 +171,9 @@ export interface XixiAgenda {
   observacao: string | null;
 }
 
+/** Cardápio do dia por refeição (itens já na ordem); lista vazia = sem itens. */
+export type Cardapio = Record<TipoRefeicao, string[]>;
+
 /** GET /alunos/{aluno}/agenda?data=Y-m-d. `evacuacao` e `xixi` só existem no berçário. */
 export interface Agenda {
   id: number;
