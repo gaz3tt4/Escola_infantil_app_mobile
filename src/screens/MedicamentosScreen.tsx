@@ -7,6 +7,7 @@ import { NovoItemSheet } from '../components/recados/NovoItemSheet';
 import { Button } from '../components/ui/Button';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
+import { Pill } from '../components/ui/icons';
 import { LoadingView } from '../components/ui/LoadingView';
 import { Mascote } from '../components/ui/Mascote';
 import { Notice } from '../components/ui/Notice';
@@ -88,7 +89,7 @@ function MedicamentosDoAluno({ aluno }: { aluno: Aluno }) {
       {error ? <ErrorState message={error} onRetry={reload} /> : null}
       {medicamentos ? (
         medicamentos.length === 0 ? (
-          <EmptyState icon="💊" title="Nenhum medicamento informado" description="Informe aqui os medicamentos que a escola deve dar ao seu filho, com a foto da receita." />
+          <EmptyState icon={Pill} title="Nenhum medicamento informado" description="Informe aqui os medicamentos que a escola deve dar ao seu filho, com a foto da receita." />
         ) : (
           <View style={styles.list}>
             {medicamentos.map((medicamento) => (

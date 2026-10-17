@@ -1,12 +1,18 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
+import type { LucideIcon } from 'lucide-react-native';
+
+import { Icon } from './Icon';
+import { Inbox } from './icons';
 import { colors, spacing } from '../../theme';
 
-export function EmptyState({ icon = '🗒️', title, description }: { icon?: string; title: string; description?: string }) {
+export function EmptyState({ icon = Inbox, title, description }: { icon?: LucideIcon; title: string; description?: string }) {
   return (
     <View style={styles.container}>
-      <Text style={styles.icon}>{icon}</Text>
+      <View style={styles.iconWrap}>
+        <Icon icon={icon} color="brandDark" />
+      </View>
       <Text style={styles.title}>{title}</Text>
       {description ? <Text style={styles.description}>{description}</Text> : null}
     </View>
@@ -20,8 +26,13 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xl,
     gap: spacing.xs,
   },
-  icon: {
-    fontSize: 32,
+  iconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.brandSoft,
     marginBottom: spacing.xs,
   },
   title: {

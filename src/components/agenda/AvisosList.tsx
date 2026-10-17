@@ -1,24 +1,28 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
+import type { LucideIcon } from 'lucide-react-native';
+
 import { Card } from '../ui/Card';
+import { Icon } from '../ui/Icon';
+import { CalendarCheck, Megaphone, PartyPopper, Star } from '../ui/icons';
 import type { Aviso } from '../../services/types';
 import { colors, spacing } from '../../theme';
 import { formatDateBR } from '../../utils/format';
 
 interface VisualTipo {
-  icon: string;
+  icon: LucideIcon;
   label: string;
   bg: string;
   fg: string;
 }
 
 // Cores do design system; tipo desconhecido cai em `geral`.
-const GERAL: VisualTipo = { icon: '📣', label: 'Aviso', bg: colors.brandSoft, fg: colors.brandDark };
+const GERAL: VisualTipo = { icon: Megaphone, label: 'Aviso', bg: colors.brandSoft, fg: colors.brandDark };
 const VISUAL_POR_TIPO: Record<string, VisualTipo> = {
-  feriado: { icon: '🎉', label: 'Feriado', bg: colors.coralSoft, fg: '#B23A2C' },
-  aula_extra: { icon: '⭐', label: 'Aula extra', bg: colors.lavenderSoft, fg: '#5B4FBF' },
-  evento: { icon: '🎈', label: 'Evento', bg: colors.skySoft, fg: '#1E6FA8' },
+  feriado: { icon: CalendarCheck, label: 'Feriado', bg: colors.coralSoft, fg: '#B23A2C' },
+  aula_extra: { icon: Star, label: 'Aula extra', bg: colors.lavenderSoft, fg: '#5B4FBF' },
+  evento: { icon: PartyPopper, label: 'Evento', bg: colors.skySoft, fg: '#1E6FA8' },
   geral: GERAL,
 };
 
@@ -46,7 +50,7 @@ export function AvisosList({ avisos }: { avisos: Aviso[] }) {
           return (
           <View key={aviso.id} style={styles.item}>
             <View style={[styles.iconWrap, { backgroundColor: visual.bg }]}>
-              <Text style={styles.icon}>{visual.icon}</Text>
+              <Icon icon={visual.icon} color={visual.fg} />
             </View>
             <View style={styles.itemBody}>
               <Text style={[styles.periodo, { color: visual.fg }]}>
@@ -83,9 +87,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  icon: {
-    fontSize: 16,
   },
   itemBody: {
     flex: 1,

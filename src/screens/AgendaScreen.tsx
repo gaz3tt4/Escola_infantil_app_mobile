@@ -9,6 +9,8 @@ import { NovoItemSheet } from '../components/recados/NovoItemSheet';
 import { Button } from '../components/ui/Button';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
+import { Icon } from '../components/ui/Icon';
+import { ChevronLeft, ChevronRight, Inbox } from '../components/ui/icons';
 import { LoadingView } from '../components/ui/LoadingView';
 import { Mascote } from '../components/ui/Mascote';
 import { Notice } from '../components/ui/Notice';
@@ -146,7 +148,7 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
             accessibilityRole="button"
             accessibilityLabel="Dia anterior"
           >
-            <Text style={styles.dateButtonText}>‹</Text>
+            <Icon icon={ChevronLeft} color="onBrand" />
           </TouchableOpacity>
           <Text style={styles.dateLabel}>{isToday ? 'Hoje' : formatDateLong(date)}</Text>
           <TouchableOpacity
@@ -156,7 +158,7 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
             accessibilityRole="button"
             accessibilityLabel="Próximo dia"
           >
-            <Text style={styles.dateButtonText}>›</Text>
+            <Icon icon={ChevronRight} color="onBrand" />
           </TouchableOpacity>
         </View>
       </View>
@@ -187,7 +189,7 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
             <View style={styles.vazio}>
               <Mascote size={30} segments={3} />
               <EmptyState
-                icon="📭"
+                icon={Inbox}
                 title={agenda ? 'Agenda sem registros' : 'Sem agenda neste dia'}
                 description={
                   agenda
@@ -280,11 +282,6 @@ const styles = StyleSheet.create({
   },
   dateButtonDisabled: {
     opacity: 0.35,
-  },
-  dateButtonText: {
-    fontSize: 20,
-    color: colors.onBrand,
-    fontWeight: '800',
   },
   dateLabel: {
     fontSize: 14,

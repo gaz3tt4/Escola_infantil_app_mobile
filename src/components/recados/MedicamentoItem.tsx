@@ -2,6 +2,8 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { Card } from '../ui/Card';
+import { Icon } from '../ui/Icon';
+import { Pill as PillIcon } from '../ui/icons';
 import { Pill } from '../ui/Pill';
 import { medicamentoEditavel } from '../../services/medicamentos';
 import type { Medicamento } from '../../services/types';
@@ -31,7 +33,10 @@ export function MedicamentoItem({
   return (
     <Card style={styles.card}>
       <View style={styles.header}>
-        <Text style={styles.title}>💊 {medicamento.nome}</Text>
+        <View style={styles.titleRow}>
+          <Icon icon={PillIcon} size="sm" color="brandDark" />
+          <Text style={styles.title}>{medicamento.nome}</Text>
+        </View>
         <Pill
           label={medicamento.administrado ? 'Administrado' : 'Aguardando'}
           bg={medicamento.administrado ? colors.brandSoft : colors.sunnySoft}
@@ -69,6 +74,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: spacing.sm,
+  },
+  titleRow: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
   },
   title: {
     flex: 1,

@@ -1,8 +1,10 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import type { LucideIcon } from 'lucide-react-native';
 import React from 'react';
-import { Text } from 'react-native';
 
 import { AgendaScreen } from '../screens/AgendaScreen';
+import { Icon } from '../components/ui/Icon';
+import { BookOpen, CreditCard, Pill, User } from '../components/ui/icons';
 import { PagamentosScreen } from '../screens/PagamentosScreen';
 import { PerfilScreen } from '../screens/PerfilScreen';
 import { MedicamentosScreen } from '../screens/MedicamentosScreen';
@@ -12,11 +14,12 @@ import type { MainTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-const TAB_ICONS: Record<keyof MainTabParamList, string> = {
-  Agenda: '🗓️',
-  Medicamentos: '💊',
-  Perfil: '🧒',
-  Pagamentos: '💳',
+// Mesmos ícones do painel web quando o conceito é o mesmo (agenda = book-open).
+const TAB_ICONS: Record<keyof MainTabParamList, LucideIcon> = {
+  Agenda: BookOpen,
+  Medicamentos: Pill,
+  Perfil: User,
+  Pagamentos: CreditCard,
 };
 
 export function MainTabs() {
@@ -38,8 +41,9 @@ export function MainTabs() {
           fontSize: 12,
           fontWeight: '600',
         },
-        tabBarIcon: ({ color }) => (
-          <Text style={{ fontSize: 20, color }}>{TAB_ICONS[route.name as keyof MainTabParamList]}</Text>
+        // Aba ativa na cor da marca; inativa em cinza do tema.
+        tabBarIcon: ({ focused }) => (
+          <Icon icon={TAB_ICONS[route.name as keyof MainTabParamList]} color={focused ? 'brandDark' : 'textMuted'} />
         ),
       })}
     >

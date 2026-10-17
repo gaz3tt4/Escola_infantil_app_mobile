@@ -13,6 +13,7 @@ import { LoadingView } from '../components/ui/LoadingView';
 import { ScreenContainer } from '../components/ui/ScreenContainer';
 import { useAsyncResource } from '../hooks/useAsyncResource';
 import { listarFaturasDosMeusAlunos, podePagar, type FaturaComAluno } from '../services/faturas';
+import { CircleCheck, Backpack } from '../components/ui/icons';
 import { colors, spacing, typography } from '../theme';
 import { formatCurrencyBRL } from '../utils/format';
 
@@ -57,7 +58,7 @@ export function PagamentosScreen() {
     if (isLoading) return <LoadingView label="Carregando pagamentos..." />;
     if (error) return <ErrorState message={error} onRetry={reload} />;
     if (alunos.length === 0) {
-      return <EmptyState icon="🎒" title="Nenhum aluno vinculado" description="Fale com a secretaria da escola para vincular seus filhos à sua conta." />;
+      return <EmptyState icon={Backpack} title="Nenhum aluno vinculado" description="Fale com a secretaria da escola para vincular seus filhos à sua conta." />;
     }
 
     const showAluno = alunos.length > 1 && filtroAtivo === 'todos';
@@ -83,7 +84,7 @@ export function PagamentosScreen() {
           <Text style={typography.sectionTitle}>Em aberto</Text>
           {emAberto.length === 0 ? (
             <Card>
-              <EmptyState icon="✅" title="Tudo em dia!" description="Não há cobranças em aberto no momento." />
+              <EmptyState icon={CircleCheck} title="Tudo em dia!" description="Não há cobranças em aberto no momento." />
             </Card>
           ) : (
             <View style={styles.list}>

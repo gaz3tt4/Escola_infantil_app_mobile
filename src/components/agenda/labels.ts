@@ -1,3 +1,6 @@
+import type { LucideIcon } from 'lucide-react-native';
+
+import { Apple, CookingPot, Sandwich, Utensils } from '../ui/icons';
 import type {
   AceitacaoRefeicao,
   AspectoXixi,
@@ -21,11 +24,11 @@ export const refeicaoLabels: Record<TipoRefeicao, string> = {
 /** Ordem das refeições ao longo do dia. */
 export const ordemRefeicoes: TipoRefeicao[] = ['lanche_manha', 'almoco', 'lanche_tarde', 'jantar'];
 
-export const refeicaoIcons: Record<TipoRefeicao, string> = {
-  lanche_manha: '🍎',
-  almoco: '🍽️',
-  lanche_tarde: '🥪',
-  jantar: '🍲',
+export const refeicaoIcons: Record<TipoRefeicao, LucideIcon> = {
+  lanche_manha: Apple,
+  almoco: Utensils,
+  lanche_tarde: Sandwich,
+  jantar: CookingPot,
 };
 
 export const aceitacaoLabels: Record<AceitacaoRefeicao, string> = {

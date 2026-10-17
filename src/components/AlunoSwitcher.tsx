@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { ChipSelector } from './ui/ChipSelector';
+import { Backpack } from './ui/icons';
 import { EmptyState } from './ui/EmptyState';
 import { ErrorState } from './ui/ErrorState';
 import { LoadingView } from './ui/LoadingView';
@@ -32,7 +33,7 @@ export function useAlunosGate(): React.ReactElement | null {
   if (!selectedAluno) {
     return (
       <EmptyState
-        icon="🎒"
+        icon={Backpack}
         title="Nenhum aluno vinculado"
         description="Fale com a secretaria da escola para vincular seus filhos à sua conta."
       />

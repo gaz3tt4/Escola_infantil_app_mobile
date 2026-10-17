@@ -10,7 +10,11 @@ import {
   segmentoLabels,
   xixiLabels,
 } from './labels';
+import type { LucideIcon } from 'lucide-react-native';
+
 import { Card } from '../ui/Card';
+import { Icon } from '../ui/Icon';
+import { Baby, Droplet, Milk, Moon, Palette, Utensils } from '../ui/icons';
 import { Pill } from '../ui/Pill';
 import { RecadoItem } from '../recados/RecadoItem';
 import { temCardapio } from '../../services/agenda';
@@ -35,11 +39,11 @@ function duracao(dormiu: string | null, acordou: string | null): string | null {
   return resto === 0 ? `${horas}h` : `${horas}h${String(resto).padStart(2, '0')}`;
 }
 
-function Bloco({ icon, titulo, children }: { icon: string; titulo: string; children: React.ReactNode }) {
+function Bloco({ icon, titulo, children }: { icon: LucideIcon; titulo: string; children: React.ReactNode }) {
   return (
     <Card style={styles.bloco}>
       <View style={styles.blocoHeader}>
-        <Text style={styles.blocoIcon}>{icon}</Text>
+        <Icon icon={icon} color="brandDark" />
         <Text style={styles.blocoTitulo}>{titulo}</Text>
       </View>
       <View style={styles.itens}>{children}</View>
@@ -66,9 +70,10 @@ function Refeicao({ tipo, refeicao, cardapio }: { tipo: TipoRefeicao; refeicao?:
   return (
     <View style={styles.linha}>
       <View style={styles.linhaTopo}>
-        <Text style={styles.linhaTitulo}>
-          {refeicaoIcons[tipo] ?? '🍽️'} {refeicaoLabels[tipo] ?? 'Refeição'}
-        </Text>
+        <View style={styles.linhaTituloComIcone}>
+          <Icon icon={refeicaoIcons[tipo] ?? Utensils} size="sm" color="textSecondary" />
+          <Text style={styles.linhaTitulo}>{refeicaoLabels[tipo] ?? 'Refeição'}</Text>
+        </View>
         {refeicao?.horario ? <Text style={styles.linhaDetalhe}>{refeicao.horario}</Text> : null}
       </View>
       {cardapio.length > 0 ? (
@@ -102,7 +107,7 @@ export function RefeicoesBloco({ refeicoes, cardapio }: { refeicoes: RefeicaoAge
   if (tipos.length === 0 && outras.length === 0) return null;
 
   return (
-    <Bloco icon="🍽️" titulo="Refeições">
+    <Bloco icon={Utensils} titulo="Refeições">
       {tipos.flatMap((tipo) => {
         const registradas = refeicoes.filter((r) => r.tipo === tipo);
         return registradas.length > 0
@@ -163,7 +168,7 @@ export function AgendaDoDia({ agenda, cardapio, onEditRecado, onDeleteRecado, bu
       {semBlocos ? <Text style={styles.legenda}>O relatório do dia (refeições, sonecas) ainda não foi lançado.</Text> : null}
 
       {agenda.atividades ? (
-        <Bloco icon="🎨" titulo="Atividades do dia">
+        <Bloco icon={Palette} titulo="Atividades do dia">
           <Text style={styles.atividades}>{agenda.atividades}</Text>
         </Bloco>
       ) : null}
@@ -171,7 +176,7 @@ export function AgendaDoDia({ agenda, cardapio, onEditRecado, onDeleteRecado, bu
       <RefeicoesBloco refeicoes={agenda.refeicoes} cardapio={cardapio} />
 
       {agenda.sonecas.length > 0 ? (
-        <Bloco icon="😴" titulo="Sonecas">
+        <Bloco icon={Moon} titulo="Sonecas">
           {agenda.sonecas.map((soneca) => (
             <Soneca key={soneca.id} soneca={soneca} />
           ))}
@@ -179,7 +184,7 @@ export function AgendaDoDia({ agenda, cardapio, onEditRecado, onDeleteRecado, bu
       ) : null}
 
       {agenda.mamadeiras.length > 0 ? (
-        <Bloco icon="🍼" titulo="Mamadeiras">
+        <Bloco icon={Milk} titulo="Mamadeiras">
           {agenda.mamadeiras.map((mamadeira) => (
             <Linha key={mamadeira.id} titulo={`${mamadeira.quantidade_ml} ml`} detalhe={mamadeira.horario} />
           ))}
@@ -187,7 +192,7 @@ export function AgendaDoDia({ agenda, cardapio, onEditRecado, onDeleteRecado, bu
       ) : null}
 
       {agenda.evacuacao ? (
-        <Bloco icon="🧷" titulo="Evacuação">
+        <Bloco icon={Baby} titulo="Evacuação">
           <Linha
             titulo={evacuacaoLabels[agenda.evacuacao.tipo] ?? agenda.evacuacao.tipo}
             detalhe={agenda.evacuacao.horario}
@@ -197,7 +202,7 @@ export function AgendaDoDia({ agenda, cardapio, onEditRecado, onDeleteRecado, bu
       ) : null}
 
       {agenda.xixi ? (
-        <Bloco icon="💧" titulo="Xixi">
+        <Bloco icon={Droplet} titulo="Xixi">
           <Linha
             titulo={xixiLabels[agenda.xixi.aspecto] ?? agenda.xixi.aspecto}
             detalhe={agenda.xixi.horario}
@@ -240,8 +245,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
-  blocoIcon: {
-    fontSize: 20,
+  linhaTituloComIcone: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
   },
   blocoTitulo: {
     fontSize: 15,

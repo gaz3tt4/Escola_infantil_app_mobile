@@ -2,6 +2,8 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { Card } from '../ui/Card';
+import { Icon } from '../ui/Icon';
+import { MessageSquare, Palette } from '../ui/icons';
 import { recadoEditavel } from '../../services/recados';
 import type { Recado } from '../../services/types';
 import { colors, spacing } from '../../theme';
@@ -31,7 +33,10 @@ export function RecadoItem({
   return (
     <Card style={styles.card} tint={atividades ? colors.brandSoft : undefined}>
       <View style={styles.header}>
-        <Text style={styles.title}>{atividades ? '🎨 Atividades do dia' : '💌 Recado'}</Text>
+        <View style={styles.titleRow}>
+          <Icon icon={atividades ? Palette : MessageSquare} size="sm" color="brandDark" />
+          <Text style={styles.title}>{atividades ? 'Atividades do dia' : 'Recado'}</Text>
+        </View>
         <Text style={styles.date}>{formatDateBR(recado.data)}</Text>
       </View>
       <Text style={styles.message}>{recado.texto}</Text>
@@ -63,12 +68,17 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
+  titleRow: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginRight: spacing.sm,
+  },
   title: {
     fontSize: 15,
     fontWeight: '700',
     color: colors.textPrimary,
-    flex: 1,
-    marginRight: spacing.sm,
   },
   date: {
     fontSize: 12,

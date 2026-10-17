@@ -1,12 +1,15 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+import { Icon } from '../ui/Icon';
+import { Barcode, ChevronRight, Zap } from '../ui/icons';
+import type { LucideIcon } from 'lucide-react-native';
 import type { FormaPagamento } from '../../services/faturas';
 import { colors, radius, spacing } from '../../theme';
 
-const OPTIONS: { forma: FormaPagamento; icon: string; label: string; description: string }[] = [
-  { forma: 'pix', icon: '⚡', label: 'Pix', description: 'QR code ou copia e cola, compensação na hora' },
-  { forma: 'boleto', icon: '🧾', label: 'Boleto bancário', description: 'Linha digitável ou PDF do boleto' },
+const OPTIONS: { forma: FormaPagamento; icon: LucideIcon; label: string; description: string }[] = [
+  { forma: 'pix', icon: Zap, label: 'Pix', description: 'QR code ou copia e cola, compensação na hora' },
+  { forma: 'boleto', icon: Barcode, label: 'Boleto bancário', description: 'Linha digitável ou PDF do boleto' },
 ];
 
 interface PaymentMethodPickerProps {
@@ -31,12 +34,12 @@ export function PaymentMethodPicker({ onSelect, selected, disabled }: PaymentMet
             accessibilityRole="button"
             accessibilityState={{ selected: isSelected, disabled }}
           >
-            <Text style={styles.icon}>{option.icon}</Text>
+            <Icon icon={option.icon} color="brandDark" />
             <View style={styles.texts}>
               <Text style={styles.label}>{option.label}</Text>
               <Text style={styles.description}>{option.description}</Text>
             </View>
-            {selected === undefined ? <Text style={styles.chevron}>›</Text> : <View style={[styles.radio, isSelected && styles.radioOn]} />}
+            {selected === undefined ? <Icon icon={ChevronRight} color="textMuted" /> : <View style={[styles.radio, isSelected && styles.radioOn]} />}
           </TouchableOpacity>
         );
       })}
@@ -62,9 +65,6 @@ const styles = StyleSheet.create({
     borderColor: colors.brand,
     backgroundColor: colors.brandSoft,
   },
-  icon: {
-    fontSize: 24,
-  },
   texts: {
     flex: 1,
   },
@@ -77,10 +77,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textSecondary,
     marginTop: 2,
-  },
-  chevron: {
-    fontSize: 22,
-    color: colors.textMuted,
   },
   radio: {
     width: 20,

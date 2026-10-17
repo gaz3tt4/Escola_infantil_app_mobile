@@ -24,5 +24,5 @@ export function CopyButton({ value, label, variant = 'primary' }: CopyButtonProp
     setCopied(true);
   }
 
-  return <Button title={copied ? 'Copiado! ✓' : label} variant={variant} onPress={handleCopy} />;
+  return <Button title={copied ? 'Copiado!' : label} variant={variant} onPress={handleCopy} />;
 }

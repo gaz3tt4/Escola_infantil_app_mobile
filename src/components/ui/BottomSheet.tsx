@@ -2,6 +2,8 @@ import React from 'react';
 import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Icon } from './Icon';
+import { X } from './icons';
 import { colors, radius, spacing } from '../../theme';
 
 interface BottomSheetProps {
@@ -32,7 +34,7 @@ export function BottomSheet({ visible, title, subtitle, onClose, children }: Bot
               accessibilityRole="button"
               accessibilityLabel="Fechar"
             >
-              <Text style={styles.close}>✕</Text>
+              <Icon icon={X} color="textMuted" />
             </TouchableOpacity>
           </View>
           <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
@@ -86,11 +88,6 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 13,
     color: colors.textSecondary,
-  },
-  close: {
-    fontSize: 18,
-    color: colors.textMuted,
-    padding: spacing.xs,
   },
   content: {
     gap: spacing.md,
