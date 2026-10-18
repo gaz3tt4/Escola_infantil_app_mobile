@@ -8,7 +8,7 @@ import { Button } from '../components/ui/Button';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { Pill } from '../components/ui/icons';
-import { LoadingView } from '../components/ui/LoadingView';
+import { CentopeiaLoader } from '../components/ui/CentopeiaLoader';
 import { Mascote } from '../components/ui/Mascote';
 import { Notice } from '../components/ui/Notice';
 import { ScreenContainer } from '../components/ui/ScreenContainer';
@@ -85,7 +85,7 @@ function MedicamentosDoAluno({ aluno }: { aluno: Aluno }) {
       </View>
 
       {aviso ? <Notice message={aviso} /> : null}
-      {isLoading ? <LoadingView label="Carregando medicamentos..." /> : null}
+      {isLoading ? <CentopeiaLoader label="Carregando medicamentos..." /> : null}
       {error ? <ErrorState message={error} onRetry={reload} /> : null}
       {medicamentos ? (
         medicamentos.length === 0 ? (

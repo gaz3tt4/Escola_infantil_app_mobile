@@ -4,7 +4,7 @@ import { ChipSelector } from './ui/ChipSelector';
 import { Backpack } from './ui/icons';
 import { EmptyState } from './ui/EmptyState';
 import { ErrorState } from './ui/ErrorState';
-import { LoadingView } from './ui/LoadingView';
+import { CentopeiaLoader } from './ui/CentopeiaLoader';
 import { useAlunos } from '../context/AlunosContext';
 import { firstName } from '../utils/format';
 
@@ -28,7 +28,7 @@ export function AlunoSwitcher() {
  */
 export function useAlunosGate(): React.ReactElement | null {
   const { selectedAluno, isLoading, error, reload } = useAlunos();
-  if (isLoading) return <LoadingView label="Carregando seus filhos..." />;
+  if (isLoading) return <CentopeiaLoader label="Carregando seus filhos..." />;
   if (error) return <ErrorState message={error} onRetry={reload} />;
   if (!selectedAluno) {
     return (

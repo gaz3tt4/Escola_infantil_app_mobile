@@ -11,7 +11,7 @@ import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { Icon } from '../components/ui/Icon';
 import { ChevronLeft, ChevronRight, Inbox } from '../components/ui/icons';
-import { LoadingView } from '../components/ui/LoadingView';
+import { CentopeiaLoader } from '../components/ui/CentopeiaLoader';
 import { Mascote } from '../components/ui/Mascote';
 import { Notice } from '../components/ui/Notice';
 import { ScreenContainer } from '../components/ui/ScreenContainer';
@@ -163,7 +163,7 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
         </View>
       </View>
 
-      {isLoading ? <LoadingView label="Carregando agenda..." /> : null}
+      {isLoading ? <CentopeiaLoader label="Carregando agenda..." /> : null}
       {error ? <ErrorState message={error} onRetry={reload} /> : null}
       {data ? (
         <>

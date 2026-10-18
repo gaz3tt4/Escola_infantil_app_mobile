@@ -9,7 +9,7 @@ import { Card } from '../components/ui/Card';
 import { ChipSelector } from '../components/ui/ChipSelector';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
-import { LoadingView } from '../components/ui/LoadingView';
+import { CentopeiaLoader } from '../components/ui/CentopeiaLoader';
 import { ScreenContainer } from '../components/ui/ScreenContainer';
 import { useAsyncResource } from '../hooks/useAsyncResource';
 import { listarFaturasDosMeusAlunos, podePagar, type FaturaComAluno } from '../services/faturas';
@@ -55,7 +55,7 @@ export function PagamentosScreen() {
   }
 
   function renderContent() {
-    if (isLoading) return <LoadingView label="Carregando pagamentos..." />;
+    if (isLoading) return <CentopeiaLoader label="Carregando pagamentos..." />;
     if (error) return <ErrorState message={error} onRetry={reload} />;
     if (alunos.length === 0) {
       return <EmptyState icon={Backpack} title="Nenhum aluno vinculado" description="Fale com a secretaria da escola para vincular seus filhos à sua conta." />;

@@ -9,7 +9,7 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { CopyButton } from '../components/ui/CopyButton';
 import { ErrorState } from '../components/ui/ErrorState';
-import { LoadingView } from '../components/ui/LoadingView';
+import { CentopeiaLoader } from '../components/ui/CentopeiaLoader';
 import { ScreenContainer } from '../components/ui/ScreenContainer';
 import { useAsyncResource } from '../hooks/useAsyncResource';
 import { obterFatura, podePagar, TIPO_LABEL } from '../services/faturas';
@@ -38,7 +38,7 @@ export function FaturaDetalheScreen({ route }: Props) {
   const { data: fatura, error, isLoading, isRefreshing, reload } = useAsyncResource(loader);
   const [pagando, setPagando] = useState(false);
 
-  if (isLoading) return <LoadingView label="Carregando fatura..." />;
+  if (isLoading) return <CentopeiaLoader label="Carregando fatura..." />;
 
   return (
     <ScreenContainer edges={[]} refreshing={isRefreshing} onRefresh={reload}>

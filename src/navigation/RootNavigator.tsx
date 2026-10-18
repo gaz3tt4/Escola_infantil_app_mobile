@@ -2,7 +2,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 
-import { LoadingView } from '../components/ui/LoadingView';
+import { CentopeiaLoader } from '../components/ui/CentopeiaLoader';
 import { AlunosProvider } from '../context/AlunosContext';
 import { useAuth } from '../context/AuthContext';
 import { PendenciasProvider } from '../context/PendenciasContext';
@@ -22,7 +22,7 @@ export function RootNavigator() {
   const { status, mustChangePassword } = useAuth();
 
   if (status === 'bootstrapping') {
-    return <LoadingView label="Carregando..." />;
+    return <CentopeiaLoader label="Carregando..." />;
   }
 
   if (status === 'unreachable') {

@@ -2,6 +2,7 @@ export { Button } from './Button';
 export { Card } from './Card';
 export { EmptyState } from './EmptyState';
 export { LoadingView } from './LoadingView';
+export { CentopeiaLoader } from './CentopeiaLoader';
 export { Pill } from './Pill';
 export { ScreenContainer } from './ScreenContainer';
 export { Mascote } from './Mascote';
