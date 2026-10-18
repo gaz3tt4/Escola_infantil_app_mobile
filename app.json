@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "Centopeia_app",
+    "slug": "Centopeia_app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "color": "#84CC3A",
+          "defaultChannel": "agenda"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O Centopeia usa suas fotos para anexar a receita médica do seu filho.",
+          "cameraPermission": "O Centopeia usa a câmera para fotografar a receita médica do seu filho.",
+          "microphonePermission": false
+        }
+      ]
+    ]
+  }
+}

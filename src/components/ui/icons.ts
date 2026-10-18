@@ -1,0 +1,32 @@
+// Ícones Lucide usados no app, importados um a um (cada arquivo tem export default) para não
+// levar a biblioteca inteira no bundle. Os nomes seguem o design system do painel web.
+export { default as Apple } from 'lucide-react-native/icons/apple';
+export { default as Backpack } from 'lucide-react-native/icons/backpack';
+export { default as Baby } from 'lucide-react-native/icons/baby';
+export { default as Barcode } from 'lucide-react-native/icons/barcode';
+export { default as BookOpen } from 'lucide-react-native/icons/book-open';
+export { default as CalendarCheck } from 'lucide-react-native/icons/calendar-check';
+export { default as CalendarX } from 'lucide-react-native/icons/calendar-x';
+export { default as Check } from 'lucide-react-native/icons/check';
+export { default as ChevronLeft } from 'lucide-react-native/icons/chevron-left';
+export { default as ChevronRight } from 'lucide-react-native/icons/chevron-right';
+export { default as CircleCheck } from 'lucide-react-native/icons/circle-check';
+export { default as ClipboardList } from 'lucide-react-native/icons/clipboard-list';
+export { default as CookingPot } from 'lucide-react-native/icons/cooking-pot';
+export { default as CreditCard } from 'lucide-react-native/icons/credit-card';
+export { default as Droplet } from 'lucide-react-native/icons/droplet';
+export { default as Inbox } from 'lucide-react-native/icons/inbox';
+export { default as Megaphone } from 'lucide-react-native/icons/megaphone';
+export { default as MessageSquare } from 'lucide-react-native/icons/message-square';
+export { default as Milk } from 'lucide-react-native/icons/milk';
+export { default as Moon } from 'lucide-react-native/icons/moon';
+export { default as Palette } from 'lucide-react-native/icons/palette';
+export { default as PartyPopper } from 'lucide-react-native/icons/party-popper';
+export { default as Pill } from 'lucide-react-native/icons/pill';
+export { default as Sandwich } from 'lucide-react-native/icons/sandwich';
+export { default as Star } from 'lucide-react-native/icons/star';
+export { default as TriangleAlert } from 'lucide-react-native/icons/triangle-alert';
+export { default as User } from 'lucide-react-native/icons/user';
+export { default as Utensils } from 'lucide-react-native/icons/utensils';
+export { default as X } from 'lucide-react-native/icons/x';
+export { default as Zap } from 'lucide-react-native/icons/zap';
