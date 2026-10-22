@@ -22,6 +22,8 @@ npx expo start
 - Homologação: `https://homolog.escolacentopeia.com.br/api`
 - Produção: `https://app.escolacentopeia.com.br/api`
 
+Ambientes, perfis do EAS e selo de homologação: veja [AMBIENTES.md](AMBIENTES.md).
+
 Sem a variável, o app mostra um erro de configuração em vez de usar uma URL fixa.
 
 Verificações:

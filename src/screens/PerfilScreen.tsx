@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { AlunoSwitcher, useAlunosGate } from '../components/AlunoSwitcher';
 import { ChildHeader } from '../components/perfil/ChildHeader';
 import { StatGrid } from '../components/perfil/StatGrid';
+import { AmbienteBadge } from '../components/ui/AmbienteBadge';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { DemoBadge } from '../components/ui/DemoBadge';
@@ -61,6 +62,7 @@ export function PerfilScreen() {
             {me.data?.nome ? `Olá, ${firstName(me.data.nome)}!` : 'Perfil'}
           </Text>
           <Text style={styles.headerSubtitle}>Seus dados e dos seus filhos</Text>
+          <AmbienteBadge />
         </View>
         <Mascote size={26} segments={3} />
       </View>

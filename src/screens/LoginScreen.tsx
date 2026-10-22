@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AmbienteBadge } from '../components/ui/AmbienteBadge';
 import { Button } from '../components/ui/Button';
 import { Mascote } from '../components/ui/Mascote';
 import { Notice } from '../components/ui/Notice';
@@ -44,6 +45,7 @@ export function LoginScreen() {
             <Mascote size={44} segments={4} />
             <Text style={styles.title}>Centopeia</Text>
             <Text style={styles.subtitle}>Acompanhe a rotina escolar do seu filho</Text>
+            <AmbienteBadge />
           </View>
 
           <View style={styles.form}>
