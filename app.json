@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Centopeia_app",
+    "name": "Centopeia",
     "slug": "Centopeia_app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -40,6 +40,15 @@
           "photosPermission": "O Centopeia usa suas fotos para anexar a receita médica do seu filho.",
           "cameraPermission": "O Centopeia usa a câmera para fotografar a receita médica do seu filho.",
           "microphonePermission": false
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#F8FAF3"
         }
       ]
     ],
