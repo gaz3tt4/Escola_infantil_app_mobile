@@ -10,7 +10,7 @@ import { Button } from '../components/ui/Button';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { Icon } from '../components/ui/Icon';
-import { ChevronLeft, ChevronRight, Inbox } from '../components/ui/icons';
+import { CalendarX, ChevronLeft, ChevronRight, Inbox } from '../components/ui/icons';
 import { CentopeiaLoader } from '../components/ui/CentopeiaLoader';
 import { Mascote } from '../components/ui/Mascote';
 import { Notice } from '../components/ui/Notice';
@@ -74,7 +74,7 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
         obterAgenda(aluno.id, date),
         // Falha nos avisos não derruba a agenda.
         listarAvisos(aluno.id, date).catch(() => []),
-      ]).then(([{ agenda, cardapio }, avisos]) => ({ agenda, cardapio, avisos })),
+      ]).then(([{ agenda, cardapio, falta }, avisos]) => ({ agenda, cardapio, falta, avisos })),
     [aluno.id, date]
   );
   const { data, error, isLoading, isRefreshing, reload } = useAsyncResource(loader);
@@ -117,7 +117,9 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
     ]);
   }
 
-  const agenda = data?.agenda ?? null;
+  // Dia de falta: só os avisos da turma; sem agenda, cardápio, recado nem ciência.
+  const falta = data?.falta === true;
+  const agenda = falta ? null : (data?.agenda ?? null);
   // Agenda "só de recado" (sem blocos) não exige ciência: o backend não a lista como pendente nem envia push.
   const exigeCiencia = agenda !== null && !agendaSemBlocos(agenda);
   const pendente = exigeCiencia && !agenda.ciente && !confirmadas.has(agenda.id);
@@ -165,7 +167,16 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
 
       {isLoading ? <CentopeiaLoader label="Carregando agenda..." /> : null}
       {error ? <ErrorState message={error} onRetry={reload} /> : null}
-      {data ? (
+      {data && falta ? (
+        data.avisos.length > 0 ? (
+          <AvisosList avisos={data.avisos} />
+        ) : (
+          <View style={styles.vazio}>
+            <Mascote size={30} segments={3} />
+            <EmptyState icon={CalendarX} title="Falta" description="O aluno não esteve na escola neste dia." />
+          </View>
+        )
+      ) : data ? (
         <>
           {cienteAgora ? <Notice tone="success" message="Ciência confirmada. Obrigado!" /> : null}
           {agenda && !agendaSemConteudo(agenda, data.cardapio) ? (
