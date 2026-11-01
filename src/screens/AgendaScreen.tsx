@@ -24,7 +24,7 @@ import { obterAgenda, temCardapio } from '../services/agenda';
 import { listarAvisos } from '../services/avisos';
 import { toApiError } from '../services/errors';
 import { apagarRecado } from '../services/recados';
-import type { Aluno, Recado } from '../services/types';
+import type { Aluno, Aviso, Recado } from '../services/types';
 import { colors, radius, spacing, typography } from '../theme';
 import { addDaysISO, firstName, formatDateLong, todayISO } from '../utils/format';
 
@@ -72,9 +72,12 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
     () =>
       Promise.all([
         obterAgenda(aluno.id, date),
-        // Falha nos avisos não derruba a agenda.
-        listarAvisos(aluno.id, date).catch(() => []),
-      ]).then(([{ agenda, cardapio, falta }, avisos]) => ({ agenda, cardapio, falta, avisos })),
+        // Falha nos avisos não derruba a agenda; em dia de falta ela é mostrada como erro (avisosFalhou).
+        listarAvisos(aluno.id, date).then(
+          (avisos) => ({ avisos, avisosFalhou: false }),
+          () => ({ avisos: [] as Aviso[], avisosFalhou: true })
+        ),
+      ]).then(([{ agenda, cardapio, falta }, resultadoAvisos]) => ({ agenda, cardapio, falta, ...resultadoAvisos })),
     [aluno.id, date]
   );
   const { data, error, isLoading, isRefreshing, reload } = useAsyncResource(loader);
@@ -168,7 +171,9 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
       {isLoading ? <CentopeiaLoader label="Carregando agenda..." /> : null}
       {error ? <ErrorState message={error} onRetry={reload} /> : null}
       {data && falta ? (
-        data.avisos.length > 0 ? (
+        data.avisosFalhou ? (
+          <ErrorState message="Não foi possível carregar os avisos deste dia." onRetry={reload} />
+        ) : data.avisos.length > 0 ? (
           <AvisosList avisos={data.avisos} />
         ) : (
           <View style={styles.vazio}>
