@@ -172,7 +172,7 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
       {error ? <ErrorState message={error} onRetry={reload} /> : null}
       {data && falta ? (
         data.avisosFalhou ? (
-          <ErrorState message="Não foi possível carregar os avisos deste dia." onRetry={reload} />
+          <ErrorState message="Os avisos da escola deste dia não chegaram. Confira sua conexão e tente de novo." onRetry={reload} />
         ) : data.avisos.length > 0 ? (
           <AvisosList avisos={data.avisos} />
         ) : (
