@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -10,7 +11,7 @@ import { Button } from '../components/ui/Button';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { Icon } from '../components/ui/Icon';
-import { CalendarX, ChevronLeft, ChevronRight, Inbox } from '../components/ui/icons';
+import { CalendarDays, CalendarX, ChevronLeft, ChevronRight, Inbox } from '../components/ui/icons';
 import { CentopeiaLoader } from '../components/ui/CentopeiaLoader';
 import { Mascote } from '../components/ui/Mascote';
 import { Notice } from '../components/ui/Notice';
@@ -54,6 +55,7 @@ export function AgendaScreen() {
 }
 
 function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
+  const navigation = useNavigation();
   const alvo = useAgendaTarget();
   const [date, setDate] = useState(() => (alvo && alvo.alunoId === aluno.id ? alvo.data : todayISO()));
   const isToday = date === todayISO();
@@ -144,7 +146,17 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
       }
     >
       <View style={styles.header}>
-        <Text style={typography.title}>Agenda de {firstName(aluno.nome)}</Text>
+        <View style={styles.titleRow}>
+          <Text style={[typography.title, styles.titleText]}>Agenda de {firstName(aluno.nome)}</Text>
+          <TouchableOpacity
+            style={styles.calendarButton}
+            onPress={() => navigation.navigate('Calendario')}
+            accessibilityRole="button"
+            accessibilityLabel="Abrir calendário da escola"
+          >
+            <Icon icon={CalendarDays} color="brandDark" />
+          </TouchableOpacity>
+        </View>
         <AlunoSwitcher />
         <View style={styles.dateNav}>
           <TouchableOpacity
@@ -266,6 +278,23 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
 const styles = StyleSheet.create({
   header: {
     gap: spacing.sm,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  titleText: {
+    flex: 1,
+  },
+  calendarButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.brandSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   semAgenda: {
     gap: spacing.md,
