@@ -6,6 +6,7 @@ export { default as Baby } from 'lucide-react-native/icons/baby';
 export { default as Barcode } from 'lucide-react-native/icons/barcode';
 export { default as BookOpen } from 'lucide-react-native/icons/book-open';
 export { default as CalendarCheck } from 'lucide-react-native/icons/calendar-check';
+export { default as CalendarDays } from 'lucide-react-native/icons/calendar-days';
 export { default as CalendarX } from 'lucide-react-native/icons/calendar-x';
 export { default as Check } from 'lucide-react-native/icons/check';
 export { default as ChevronLeft } from 'lucide-react-native/icons/chevron-left';
