@@ -1,5 +1,5 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { descricaoFatura } from '../components/pagamentos/FaturaCard';
@@ -15,7 +15,7 @@ import { useAsyncResource } from '../hooks/useAsyncResource';
 import { obterFatura, podePagar, TIPO_LABEL } from '../services/faturas';
 import type { Fatura } from '../services/types';
 import type { RootStackParamList } from '../navigation/types';
-import { colors, radius, spacing } from '../theme';
+import { radius, spacing, useColors, type Palette } from '../theme';
 import { formatCompetencia, formatCurrencyBRL, formatDateBR, formatDateTimeBR } from '../utils/format';
 import { openExternalUrl } from '../utils/links';
 
@@ -24,6 +24,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'FaturaDetalhe'>;
 const FORMA_LABEL = { pix: 'Pix', boleto: 'Boleto' } as const;
 
 function InfoRow({ label, value }: { label: string; value: string }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.row}>
       <Text style={styles.rowLabel}>{label}</Text>
@@ -67,6 +69,8 @@ export function FaturaDetalheScreen({ route }: Props) {
 }
 
 function FaturaDetalhe({ fatura, alunoNome, onPagar }: { fatura: Fatura; alunoNome: string; onPagar: () => void }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const aberta = podePagar(fatura.status);
 
   return (
@@ -125,7 +129,7 @@ function FaturaDetalhe({ fatura, alunoNome, onPagar }: { fatura: Fatura; alunoNo
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   hero: {
     alignItems: 'center',
     gap: spacing.xs,

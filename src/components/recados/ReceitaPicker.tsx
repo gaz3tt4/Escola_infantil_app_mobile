@@ -1,11 +1,11 @@
 import * as ImagePicker from 'expo-image-picker';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Image, Platform, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '../ui/Button';
 import { Notice } from '../ui/Notice';
 import type { ArquivoReceita } from '../../services/medicamentos';
-import { colors, radius, spacing } from '../../theme';
+import { radius, spacing, useColors, type Palette } from '../../theme';
 import { prepararReceita } from '../../utils/receita';
 
 interface ReceitaPickerProps {
@@ -19,6 +19,8 @@ interface ReceitaPickerProps {
 
 /** Anexo obrigatório da receita: só câmera ou galeria (sem PDF). */
 export function ReceitaPicker({ value, onChange, error, disabled, opcional }: ReceitaPickerProps) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [working, setWorking] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -102,7 +104,7 @@ export function ReceitaPicker({ value, onChange, error, disabled, opcional }: Re
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   container: {
     gap: spacing.sm,
   },

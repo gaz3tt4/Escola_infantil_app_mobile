@@ -231,6 +231,19 @@ export interface Aviso {
   autor: { nome: string; papel: string };
 }
 
+// ---------- Calendario ----------
+
+/** GET /calendario?ano=AAAA. `data` e AAAA-MM-DD, sem horario nem fuso. */
+export interface DataCalendario {
+  id: number;
+  data: string; // Y-m-d
+  titulo: string;
+  descricao: string | null;
+  /** #RRGGBB */
+  cor: string;
+  origem: 'google' | 'admin';
+}
+
 // ---------- Recados ----------
 
 /** `tipo` só tem `atividades` e `recado`; o app trata como texto. */

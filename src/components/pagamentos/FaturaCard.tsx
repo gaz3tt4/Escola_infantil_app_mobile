@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { StatusFaturaPill } from './StatusFaturaPill';
 import { Card } from '../ui/Card';
 import { TIPO_LABEL, type FaturaComAluno } from '../../services/faturas';
 import type { Fatura } from '../../services/types';
-import { colors, spacing } from '../../theme';
+import { spacing, useColors, type Palette } from '../../theme';
 import { formatCompetencia, formatCurrencyBRL, formatDateBR, firstName } from '../../utils/format';
 
 /** "Mensalidade · set/2026, out/2026" */
@@ -22,6 +22,8 @@ interface FaturaCardProps {
 }
 
 export function FaturaCard({ fatura, showAluno, onPress }: FaturaCardProps) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const pagoEm = fatura.status === 'paga' && fatura.pago_em ? `Paga em ${formatDateBR(fatura.pago_em)}` : null;
 
   return (
@@ -46,7 +48,7 @@ export function FaturaCard({ fatura, showAluno, onPress }: FaturaCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',

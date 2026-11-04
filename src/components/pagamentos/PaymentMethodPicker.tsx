@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { Icon } from '../ui/Icon';
 import { Barcode, ChevronRight, Zap } from '../ui/icons';
 import type { LucideIcon } from 'lucide-react-native';
 import type { FormaPagamento } from '../../services/faturas';
-import { colors, radius, spacing } from '../../theme';
+import { radius, spacing, useColors, type Palette } from '../../theme';
 
 const OPTIONS: { forma: FormaPagamento; icon: LucideIcon; label: string; description: string }[] = [
   { forma: 'pix', icon: Zap, label: 'Pix', description: 'QR code ou copia e cola, compensação na hora' },
@@ -20,6 +20,8 @@ interface PaymentMethodPickerProps {
 }
 
 export function PaymentMethodPicker({ onSelect, selected, disabled }: PaymentMethodPickerProps) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.container}>
       {OPTIONS.map((option) => {
@@ -47,7 +49,7 @@ export function PaymentMethodPicker({ onSelect, selected, disabled }: PaymentMet
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   container: {
     gap: spacing.sm,
   },

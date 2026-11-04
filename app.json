@@ -1,19 +1,22 @@
 {
   "expo": {
-    "name": "Centopeia_app",
+    "name": "Centopeia",
     "slug": "Centopeia_app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.escolacentopeia.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#22B94F",
         "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false
@@ -37,7 +40,26 @@
           "cameraPermission": "O Centopeia usa a câmera para fotografar a receita médica do seu filho.",
           "microphonePermission": false
         }
-      ]
-    ]
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#F2F7EC",
+          "dark": {
+            "backgroundColor": "#131814"
+          }
+        }
+      ],
+      "expo-font",
+      "expo-status-bar"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "3984e893-7a03-4e8c-a87a-415e3ed67c98"
+      }
+    }
   }
 }

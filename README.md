@@ -4,7 +4,7 @@ App mobile (iOS e Android) para responsáveis acompanharem a rotina escolar dos 
 
 ## Stack
 
-- [Expo](https://expo.dev) SDK 57 + TypeScript estrito
+- [Expo](https://expo.dev) SDK 58 + TypeScript estrito
 - React Navigation: pilha (login / troca de senha / app) + abas (Agenda, Perfil, Pagamentos)
 - Axios num cliente HTTP único (`src/services/http.ts`)
 - `expo-secure-store` para o token, `expo-clipboard` para copiar Pix e linha digitável
@@ -21,6 +21,8 @@ npx expo start
 
 - Homologação: `https://homolog.escolacentopeia.com.br/api`
 - Produção: `https://app.escolacentopeia.com.br/api`
+
+Ambientes, perfis do EAS e selo de homologação: veja [AMBIENTES.md](AMBIENTES.md).
 
 Sem a variável, o app mostra um erro de configuração em vez de usar uma URL fixa.
 

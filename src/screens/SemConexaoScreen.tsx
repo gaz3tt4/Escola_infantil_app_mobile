@@ -1,20 +1,20 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '../components/ui/Button';
-import { Mascote } from '../components/ui/Mascote';
 import { useAuth } from '../context/AuthContext';
-import { colors, spacing, typography } from '../theme';
+import { spacing, useColors, makeTypography, type Palette } from '../theme';
 
 /** Exibida quando há sessão salva mas o servidor não respondeu na abertura do app. */
 export function SemConexaoScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { bootError, retryBootstrap, logout } = useAuth();
 
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
-        <Mascote size={40} segments={3} />
         <Text style={styles.title}>Não conseguimos conectar</Text>
         <Text style={styles.message}>{bootError ?? 'Verifique sua internet e tente novamente.'}</Text>
         <View style={styles.actions}>
@@ -28,7 +28,9 @@ export function SemConexaoScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => {
+  const typography = makeTypography(colors);
+  return StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.background,
@@ -64,3 +66,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+};

@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { AlunoSwitcher, useAlunosGate } from '../components/AlunoSwitcher';
@@ -10,7 +11,7 @@ import { Button } from '../components/ui/Button';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { Icon } from '../components/ui/Icon';
-import { ChevronLeft, ChevronRight, Inbox } from '../components/ui/icons';
+import { CalendarDays, CalendarX, ChevronLeft, ChevronRight, Inbox } from '../components/ui/icons';
 import { CentopeiaLoader } from '../components/ui/CentopeiaLoader';
 import { Mascote } from '../components/ui/Mascote';
 import { Notice } from '../components/ui/Notice';
@@ -24,11 +25,12 @@ import { obterAgenda, temCardapio } from '../services/agenda';
 import { listarAvisos } from '../services/avisos';
 import { toApiError } from '../services/errors';
 import { apagarRecado } from '../services/recados';
-import type { Aluno, Recado } from '../services/types';
-import { colors, radius, spacing, typography } from '../theme';
+import type { Aluno, Aviso, Recado } from '../services/types';
+import { radius, spacing, useColors, useTypography, type Palette } from '../theme';
 import { addDaysISO, firstName, formatDateLong, todayISO } from '../utils/format';
 
 export function AgendaScreen() {
+  const typography = useTypography();
   const { alunos, selectedAluno, selectAluno } = useAlunos();
   const gate = useAlunosGate();
   const alvo = useAgendaTarget();
@@ -54,6 +56,10 @@ export function AgendaScreen() {
 }
 
 function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const typography = useTypography();
+  const navigation = useNavigation();
   const alvo = useAgendaTarget();
   const [date, setDate] = useState(() => (alvo && alvo.alunoId === aluno.id ? alvo.data : todayISO()));
   const isToday = date === todayISO();
@@ -72,9 +78,12 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
     () =>
       Promise.all([
         obterAgenda(aluno.id, date),
-        // Falha nos avisos não derruba a agenda.
-        listarAvisos(aluno.id, date).catch(() => []),
-      ]).then(([{ agenda, cardapio }, avisos]) => ({ agenda, cardapio, avisos })),
+        // Falha nos avisos não derruba a agenda; em dia de falta ela é mostrada como erro (avisosFalhou).
+        listarAvisos(aluno.id, date).then(
+          (avisos) => ({ avisos, avisosFalhou: false }),
+          () => ({ avisos: [] as Aviso[], avisosFalhou: true })
+        ),
+      ]).then(([{ agenda, cardapio, falta }, resultadoAvisos]) => ({ agenda, cardapio, falta, ...resultadoAvisos })),
     [aluno.id, date]
   );
   const { data, error, isLoading, isRefreshing, reload } = useAsyncResource(loader);
@@ -117,7 +126,9 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
     ]);
   }
 
-  const agenda = data?.agenda ?? null;
+  // Dia de falta: só os avisos da turma; sem agenda, cardápio, recado nem ciência.
+  const falta = data?.falta === true;
+  const agenda = falta ? null : (data?.agenda ?? null);
   // Agenda "só de recado" (sem blocos) não exige ciência: o backend não a lista como pendente nem envia push.
   const exigeCiencia = agenda !== null && !agendaSemBlocos(agenda);
   const pendente = exigeCiencia && !agenda.ciente && !confirmadas.has(agenda.id);
@@ -139,7 +150,17 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
       }
     >
       <View style={styles.header}>
-        <Text style={typography.title}>Agenda de {firstName(aluno.nome)}</Text>
+        <View style={styles.titleRow}>
+          <Text style={[typography.title, styles.titleText]}>Agenda de {firstName(aluno.nome)}</Text>
+          <TouchableOpacity
+            style={styles.calendarButton}
+            onPress={() => navigation.navigate('Calendario')}
+            accessibilityRole="button"
+            accessibilityLabel="Abrir calendário da escola"
+          >
+            <Icon icon={CalendarDays} color="brandDark" />
+          </TouchableOpacity>
+        </View>
         <AlunoSwitcher />
         <View style={styles.dateNav}>
           <TouchableOpacity
@@ -165,7 +186,17 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
 
       {isLoading ? <CentopeiaLoader label="Carregando agenda..." /> : null}
       {error ? <ErrorState message={error} onRetry={reload} /> : null}
-      {data ? (
+      {data && falta ? (
+        data.avisosFalhou ? (
+          <ErrorState message="Os avisos da escola deste dia não chegaram. Confira sua conexão e tente de novo." onRetry={reload} />
+        ) : data.avisos.length > 0 ? (
+          <AvisosList avisos={data.avisos} />
+        ) : (
+          <View style={styles.vazio}>
+            <EmptyState icon={CalendarX} title="Falta" description="O aluno não esteve na escola neste dia." />
+          </View>
+        )
+      ) : data ? (
         <>
           {cienteAgora ? <Notice tone="success" message="Ciência confirmada. Obrigado!" /> : null}
           {agenda && !agendaSemConteudo(agenda, data.cardapio) ? (
@@ -187,7 +218,7 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
             </View>
           ) : (
             <View style={styles.vazio}>
-              <Mascote size={30} segments={3} />
+              <Mascote size={160} />
               <EmptyState
                 icon={Inbox}
                 title={agenda ? 'Agenda sem registros' : 'Sem agenda neste dia'}
@@ -247,9 +278,26 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   header: {
     gap: spacing.sm,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  titleText: {
+    flex: 1,
+  },
+  calendarButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.brandSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   semAgenda: {
     gap: spacing.md,

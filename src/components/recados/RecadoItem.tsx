@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { Card } from '../ui/Card';
@@ -6,7 +6,7 @@ import { Icon } from '../ui/Icon';
 import { MessageSquare, Palette } from '../ui/icons';
 import { recadoEditavel } from '../../services/recados';
 import type { Recado } from '../../services/types';
-import { colors, spacing } from '../../theme';
+import { spacing, useColors, type Palette as ThemePalette } from '../../theme';
 import { formatDateBR } from '../../utils/format';
 
 function autorLabel(recado: Recado): string {
@@ -27,6 +27,8 @@ export function RecadoItem({
   onDelete?: (recado: Recado) => void;
   busy?: boolean;
 }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const atividades = recado.tipo === 'atividades';
   // Fora do prazo as ações somem.
   const editavel = recadoEditavel(recado);
@@ -59,7 +61,7 @@ export function RecadoItem({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemePalette) => StyleSheet.create({
   card: {
     gap: 4,
   },

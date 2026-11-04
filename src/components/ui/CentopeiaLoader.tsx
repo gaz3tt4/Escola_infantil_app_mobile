@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { AccessibilityInfo, ActivityIndicator, Image, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
-import { colors, spacing } from '../../theme';
+import { spacing, useColors, type Palette } from '../../theme';
 
 // Imagem original, sem nenhuma edição: o movimento é só transformação aplicada a ela inteira.
 const MASCOTE = require('../../../assets/centopeia_img_loader.png');
@@ -61,6 +61,8 @@ function useReduzirMovimento(): boolean {
 }
 
 function Faixa() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.faixa}>
       {Array.from({ length: LADRILHOS_POR_FAIXA }).map((_, indice) => (
@@ -83,6 +85,8 @@ interface CentopeiaLoaderProps {
  * Com "reduzir movimento" ativo, mostra a imagem parada com um indicador discreto.
  */
 export function CentopeiaLoader({ label }: CentopeiaLoaderProps) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const reduzir = useReduzirMovimento();
 
   return (
@@ -156,7 +160,7 @@ export function CentopeiaLoader({ label }: CentopeiaLoaderProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   container: {
     flex: 1,
     // Dentro de uma ScrollView o flex não dá altura: garante espaço para a cena.

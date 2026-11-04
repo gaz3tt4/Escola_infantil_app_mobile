@@ -1,7 +1,7 @@
-import React, { forwardRef, useState } from 'react';
-import { StyleSheet, Text, TextInput, TextInputProps, TouchableOpacity, View } from 'react-native';
+import React, { forwardRef, useState, useMemo } from 'react';
+import { StyleSheet, Text, TextInput, TextInputInstance, TextInputProps, TouchableOpacity, View } from 'react-native';
 
-import { colors, radius, spacing } from '../../theme';
+import { radius, spacing, useColors, type Palette } from '../../theme';
 
 interface TextFieldProps extends TextInputProps {
   label: string;
@@ -10,10 +10,12 @@ interface TextFieldProps extends TextInputProps {
   password?: boolean;
 }
 
-export const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
+export const TextField = forwardRef<TextInputInstance, TextFieldProps>(function TextField(
   { label, error, password, style, ...rest },
   ref
 ) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [visible, setVisible] = useState(false);
 
   return (
@@ -23,7 +25,7 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
         <TextInput
           ref={ref}
           style={[styles.input, style]}
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={colors.placeholder}
           secureTextEntry={password && !visible}
           autoCapitalize={password ? 'none' : rest.autoCapitalize}
           autoCorrect={password ? false : rest.autoCorrect}
@@ -46,7 +48,7 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
   );
 });
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   field: {
     gap: spacing.xs,
   },

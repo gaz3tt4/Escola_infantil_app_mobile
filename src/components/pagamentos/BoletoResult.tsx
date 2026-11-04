@@ -1,16 +1,18 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '../ui/Button';
 import { CopyButton } from '../ui/CopyButton';
 import { Notice } from '../ui/Notice';
 import type { ResultadoPagamento } from '../../services/faturas';
-import { colors, radius, spacing } from '../../theme';
+import { radius, spacing, useColors, type Palette } from '../../theme';
 import { openExternalUrl } from '../../utils/links';
 
 type BoletoData = Extract<ResultadoPagamento, { forma: 'boleto' }>;
 
 export function BoletoResult({ data }: { data: BoletoData }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   if (!data.linhaDigitavel && !data.urlPdf) {
     return <Notice message="O boleto foi gerado, mas os dados não vieram na resposta. Tente novamente em instantes." />;
   }
@@ -37,7 +39,7 @@ export function BoletoResult({ data }: { data: BoletoData }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   container: {
     gap: spacing.md,
   },

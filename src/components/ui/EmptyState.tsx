@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { LucideIcon } from 'lucide-react-native';
 
 import { Icon } from './Icon';
 import { Inbox } from './icons';
-import { colors, spacing } from '../../theme';
+import { spacing, useColors, type Palette } from '../../theme';
 
 export function EmptyState({ icon = Inbox, title, description }: { icon?: LucideIcon; title: string; description?: string }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.container}>
       <View style={styles.iconWrap}>
@@ -19,7 +21,7 @@ export function EmptyState({ icon = Inbox, title, description }: { icon?: Lucide
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',

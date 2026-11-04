@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { LucideIcon } from 'lucide-react-native';
@@ -7,7 +7,7 @@ import { Card } from '../ui/Card';
 import { Icon } from '../ui/Icon';
 import { CalendarCheck, Megaphone, PartyPopper, Star } from '../ui/icons';
 import type { Aviso } from '../../services/types';
-import { colors, spacing } from '../../theme';
+import { spacing, useColors, type Palette } from '../../theme';
 import { formatDateBR } from '../../utils/format';
 
 interface VisualTipo {
@@ -18,16 +18,23 @@ interface VisualTipo {
 }
 
 // Cores do design system; tipo desconhecido cai em `geral`.
-const GERAL: VisualTipo = { icon: Megaphone, label: 'Aviso', bg: colors.brandSoft, fg: colors.brandDark };
-const VISUAL_POR_TIPO: Record<string, VisualTipo> = {
-  feriado: { icon: CalendarCheck, label: 'Feriado', bg: colors.coralSoft, fg: '#B23A2C' },
-  aula_extra: { icon: Star, label: 'Aula extra', bg: colors.lavenderSoft, fg: '#5B4FBF' },
-  evento: { icon: PartyPopper, label: 'Evento', bg: colors.skySoft, fg: '#1E6FA8' },
-  geral: GERAL,
-};
+function visuais(colors: Palette): { geral: VisualTipo; porTipo: Record<string, VisualTipo> } {
+  const geral: VisualTipo = { icon: Megaphone, label: 'Aviso', bg: colors.brandSoft, fg: colors.brandDark };
+  return {
+    geral,
+    porTipo: {
+      // O tipo `feriado` segue valendo para avisos antigos que a API ainda devolve.
+      feriado: { icon: CalendarCheck, label: 'Feriado', bg: colors.coralSoft, fg: colors.coralStrong },
+      aula_extra: { icon: Star, label: 'Aula extra', bg: colors.lavenderSoft, fg: colors.lavenderStrong },
+      evento: { icon: PartyPopper, label: 'Evento', bg: colors.skySoft, fg: colors.skyStrong },
+      geral,
+    },
+  };
+}
 
-export function visualDoAviso(tipo: string | undefined): VisualTipo {
-  return (tipo && VISUAL_POR_TIPO[tipo]) || GERAL;
+export function visualDoAviso(colors: Palette, tipo: string | undefined): VisualTipo {
+  const { geral, porTipo } = visuais(colors);
+  return (tipo && porTipo[tipo]) || geral;
 }
 
 function periodo(aviso: Aviso): string {
@@ -39,6 +46,8 @@ function periodo(aviso: Aviso): string {
 
 /** Avisos da escola (admin, por turma): feriados, aulas extras e comunicados. */
 export function AvisosList({ avisos }: { avisos: Aviso[] }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   if (avisos.length === 0) return null;
 
   return (
@@ -46,7 +55,7 @@ export function AvisosList({ avisos }: { avisos: Aviso[] }) {
       <Text style={styles.title}>Avisos da escola</Text>
       <View style={styles.list}>
         {avisos.map((aviso) => {
-          const visual = visualDoAviso(aviso.tipo);
+          const visual = visualDoAviso(colors, aviso.tipo);
           return (
           <View key={aviso.id} style={styles.item}>
             <View style={[styles.iconWrap, { backgroundColor: visual.bg }]}>
@@ -67,7 +76,7 @@ export function AvisosList({ avisos }: { avisos: Aviso[] }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   title: {
     fontSize: 17,
     fontWeight: '700',
