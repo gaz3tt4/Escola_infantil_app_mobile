@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react-native';
 import React, { forwardRef, useState } from 'react';
-import { StyleSheet, Text, TextInput, TextInputProps, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TextInput, TextInputInstance, TextInputProps, TouchableOpacity, View } from 'react-native';
 
 import { Icon } from '../ui/Icon';
 import { CircleAlert, Eye, EyeOff } from '../ui/icons';
@@ -19,7 +19,7 @@ interface AuthTextFieldProps extends TextInputProps {
  * Campo do login: rótulo sempre visível, ícone à esquerda, 48 px de altura, borda `line-strong`,
  * foco com borda `focus` + halo de 3 px (`focus-soft`) e mensagem de erro com ícone.
  */
-export const AuthTextField = forwardRef<TextInput, AuthTextFieldProps>(function AuthTextField(
+export const AuthTextField = forwardRef<TextInputInstance, AuthTextFieldProps>(function AuthTextField(
   { label, icon, error, password, onFocus, onBlur, style, ...rest },
   ref
 ) {
