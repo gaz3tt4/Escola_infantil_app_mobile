@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { PendenciasProvider } from '../context/PendenciasContext';
 import { NotificationsBridge } from '../notifications/NotificationsBridge';
 import { AlterarSenhaScreen } from '../screens/AlterarSenhaScreen';
+import { CalendarioScreen } from '../screens/CalendarioScreen';
 import { FaturaDetalheScreen } from '../screens/FaturaDetalheScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { SemConexaoScreen } from '../screens/SemConexaoScreen';
@@ -59,6 +60,11 @@ export function RootNavigator() {
               name="AlterarSenha"
               component={AlterarSenhaScreen}
               options={{ headerShown: true, title: 'Alterar senha' }}
+            />
+            <Stack.Screen
+              name="Calendario"
+              component={CalendarioScreen}
+              options={{ headerShown: true, title: 'Calendário' }}
             />
           </Stack.Group>
         )}

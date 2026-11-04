@@ -17,6 +17,7 @@ export type RootStackParamList = {
   Main: NavigatorScreenParams<MainTabParamList> | undefined;
   FaturaDetalhe: { faturaId: number; alunoNome: string };
   AlterarSenha: undefined;
+  Calendario: undefined;
 };
 
 declare global {
