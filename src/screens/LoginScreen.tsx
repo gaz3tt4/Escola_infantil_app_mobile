@@ -1,124 +1,265 @@
-import React, { useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import Constants from 'expo-constants';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  AccessibilityInfo,
+  Keyboard,
+  KeyboardAvoidingView,
+  LayoutAnimation,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AmbienteBadge } from '../components/ui/AmbienteBadge';
-import { Button } from '../components/ui/Button';
-import { Mascote } from '../components/ui/Mascote';
-import { Notice } from '../components/ui/Notice';
-import { TextField } from '../components/ui/TextField';
+import { AuthTextField } from '../components/login/AuthTextField';
+import { BrandPanel } from '../components/login/BrandPanel';
+import { PrimaryButton } from '../components/login/PrimaryButton';
+import { Icon } from '../components/ui/Icon';
+import { ArrowRight, CircleAlert, Lock, Mail, ShieldCheck } from '../components/ui/icons';
 import { useAuth } from '../context/AuthContext';
-import { errorMessage } from '../services/errors';
-import { colors, spacing } from '../theme';
+import { font, type } from '../theme/fonts';
+import { ds, useTokens } from '../theme/tokens';
+import { emailValido, mensagemDeLogin } from '../utils/loginErrors';
+
+const DURACAO_MS = 150;
+
+/** true enquanto o teclado está aberto; anima a mudança só se "reduzir movimento" estiver desligado. */
+function useTecladoAberto(): boolean {
+  const [aberto, setAberto] = useState(false);
+
+  useEffect(() => {
+    let reduzir = false;
+    AccessibilityInfo.isReduceMotionEnabled().then((valor) => {
+      reduzir = valor;
+    });
+    const mudar = (valor: boolean) => {
+      if (!reduzir) {
+        LayoutAnimation.configureNext(LayoutAnimation.create(DURACAO_MS, 'easeInEaseOut', 'opacity'));
+      }
+      setAberto(valor);
+    };
+    const mostrar = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow', () =>
+      mudar(true)
+    );
+    const esconder = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide', () =>
+      mudar(false)
+    );
+    return () => {
+      mostrar.remove();
+      esconder.remove();
+    };
+  }, []);
+
+  return aberto;
+}
 
 export function LoginScreen() {
+  const t = useTokens();
+  const insets = useSafeAreaInsets();
   const { login, notice } = useAuth();
+  const tecladoAberto = useTecladoAberto();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
   const passwordRef = useRef<TextInput>(null);
 
   async function handleSubmit() {
+    if (submitting) return;
     const trimmedEmail = email.trim();
-    if (!trimmedEmail || !password) {
-      setError('Informe seu e-mail e sua senha.');
-      return;
-    }
-    setError(null);
+    const emailMsg = emailValido(trimmedEmail) ? null : 'Informe um e-mail válido.';
+    const passwordMsg = password ? null : 'Informe sua senha.';
+    setEmailError(emailMsg);
+    setPasswordError(passwordMsg);
+    setApiError(null);
+    if (emailMsg || passwordMsg) return;
+
+    Keyboard.dismiss();
     setSubmitting(true);
     try {
       await login(trimmedEmail, password);
+      // Sucesso: o RootNavigator troca a pilha de login pela Agenda (sem rota para voltar).
     } catch (err) {
-      setError(errorMessage(err));
+      setApiError(mensagemDeLogin(err));
       setSubmitting(false);
     }
   }
 
-  const message = error ?? notice;
+  const version = Constants.expoConfig?.version;
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <View style={[styles.flex, { backgroundColor: t.surface }]}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-          <View style={styles.brand}>
-            <Mascote size={44} segments={4} />
-            <Text style={styles.title}>Centopeia</Text>
-            <Text style={styles.subtitle}>Acompanhe a rotina escolar do seu filho</Text>
-            <AmbienteBadge />
-          </View>
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <BrandPanel compact={tecladoAberto} topInset={insets.top} />
 
-          <View style={styles.form}>
-            <TextField
-              label="E-mail"
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              autoCorrect={false}
-              autoComplete="email"
-              keyboardType="email-address"
-              textContentType="username"
-              placeholder="seu@email.com"
-              returnKeyType="next"
-              onSubmitEditing={() => passwordRef.current?.focus()}
-              editable={!submitting}
-            />
+          <View
+            style={[
+              styles.sheet,
+              { backgroundColor: t.surfaceRaised, paddingBottom: ds.space[5] + insets.bottom },
+              !t.dark && styles.sheetShadow,
+            ]}
+          >
+            <View style={[styles.badge, { backgroundColor: t.primarySoft }]}>
+              <Icon icon={ShieldCheck} size="sm" color={t.primaryStrong} />
+              <Text style={[type.caption, { color: t.primaryStrong }]}>Acesso para responsáveis</Text>
+            </View>
 
-            <TextField
-              ref={passwordRef}
-              label="Senha"
-              password
-              value={password}
-              onChangeText={setPassword}
-              autoComplete="current-password"
-              textContentType="password"
-              placeholder="Sua senha"
-              returnKeyType="go"
-              onSubmitEditing={handleSubmit}
-              editable={!submitting}
-            />
+            <View style={styles.heading}>
+              <Text style={[type.heading1, { color: t.ink }]} accessibilityRole="header">
+                Entrar no app
+              </Text>
+              <Text style={[type.body, { color: t.inkMuted }]}>
+                Use o e-mail cadastrado na escola para continuar.
+              </Text>
+            </View>
 
-            {message ? <Notice message={message} tone={error ? 'error' : 'info'} /> : null}
+            <View style={styles.form}>
+              <AuthTextField
+                label="E-mail"
+                icon={Mail}
+                value={email}
+                onChangeText={(value) => {
+                  setEmail(value);
+                  if (emailError) setEmailError(null);
+                }}
+                error={emailError}
+                placeholder="voce@email.com"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                textContentType="username"
+                autoComplete="email"
+                returnKeyType="next"
+                onSubmitEditing={() => passwordRef.current?.focus()}
+                editable={!submitting}
+              />
 
-            <Button title="Entrar" onPress={handleSubmit} loading={submitting} />
+              <AuthTextField
+                ref={passwordRef}
+                label="Senha"
+                icon={Lock}
+                password
+                value={password}
+                onChangeText={(value) => {
+                  setPassword(value);
+                  if (passwordError) setPasswordError(null);
+                }}
+                error={passwordError}
+                placeholder="Sua senha"
+                autoCapitalize="none"
+                autoCorrect={false}
+                textContentType="password"
+                autoComplete="current-password"
+                returnKeyType="go"
+                onSubmitEditing={handleSubmit}
+                editable={!submitting}
+              />
+
+              {apiError ? (
+                <View style={[styles.alert, { backgroundColor: t.dangerSoft }]} accessibilityRole="alert">
+                  <Icon icon={CircleAlert} size="sm" color={t.danger} />
+                  <Text style={[type.bodySm, styles.alertText, { color: t.danger }]}>{apiError}</Text>
+                </View>
+              ) : notice ? (
+                <View style={[styles.alert, { backgroundColor: t.warningSoft }]} accessibilityRole="alert">
+                  <Text style={[type.bodySm, styles.alertText, { color: t.warning }]}>{notice}</Text>
+                </View>
+              ) : null}
+
+              <PrimaryButton
+                title="Entrar"
+                loadingTitle="Entrando..."
+                icon={ArrowRight}
+                loading={submitting}
+                onPress={handleSubmit}
+              />
+            </View>
+
+            <View style={[styles.help, { backgroundColor: t.warningSoft }]}>
+              <Text style={[type.bodySm, { color: t.warning }]}>
+                <Text style={styles.helpStrong}>Sem acesso? </Text>
+                Solicite sua credencial à secretaria da escola.
+              </Text>
+            </View>
+
+            <Text style={[type.caption, styles.footer, { color: t.inkMuted }]}>
+              © {new Date().getFullYear()} Escola Centopeia{version ? ` · v${version}` : ''}
+            </Text>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
   flex: {
     flex: 1,
   },
-  container: {
+  scroll: {
     flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xl,
-    gap: spacing.xl,
   },
-  brand: {
+  sheet: {
+    flexGrow: 1,
+    // Sobe ~24 px sobre o painel de marca.
+    marginTop: -24,
+    borderTopLeftRadius: ds.radius.xl,
+    borderTopRightRadius: ds.radius.xl,
+    padding: ds.margin,
+    gap: ds.space[5],
+  },
+  sheetShadow: {
+    shadowColor: '#1c274c',
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 2,
+  },
+  badge: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: ds.space[1],
+    paddingVertical: ds.space[1],
+    paddingHorizontal: ds.space[3],
+    borderRadius: ds.radius.full,
   },
-  title: {
-    fontSize: 30,
-    fontWeight: '800',
-    color: colors.brandDark,
-    marginTop: spacing.sm,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: 'center',
+  heading: {
+    gap: ds.space[1],
   },
   form: {
-    gap: spacing.md,
+    gap: ds.space[4],
+  },
+  alert: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: ds.space[2],
+    borderRadius: ds.radius.md,
+    paddingVertical: ds.space[3],
+    paddingHorizontal: ds.space[3],
+  },
+  alertText: {
+    flex: 1,
+  },
+  help: {
+    borderRadius: ds.radius.lg,
+    padding: ds.space[4],
+  },
+  helpStrong: {
+    fontFamily: font.semibold,
+  },
+  footer: {
+    textAlign: 'center',
   },
 });
