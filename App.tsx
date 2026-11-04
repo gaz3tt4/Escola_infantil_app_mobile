@@ -30,7 +30,7 @@ export default function App() {
       <SafeAreaProvider>
         <AuthProvider>
           <RootNavigator />
-          <StatusBar style="dark" />
+          <StatusBar style="auto" />
         </AuthProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
