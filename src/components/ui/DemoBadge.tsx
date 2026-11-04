@@ -1,9 +1,10 @@
 import React from 'react';
 
 import { Pill } from './Pill';
-import { colors } from '../../theme';
+import { useColors } from '../../theme';
 
 /** Marca conteúdo vindo de serviço mockado (sem endpoint no backend ainda). */
 export function DemoBadge() {
-  return <Pill label="Demonstração" bg={colors.lavenderSoft} fg="#5B4FBF" />;
+  const colors = useColors();
+  return <Pill label="Demonstração" bg={colors.lavenderSoft} fg={colors.lavenderStrong} />;
 }

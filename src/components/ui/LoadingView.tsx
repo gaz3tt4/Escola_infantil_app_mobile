@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
-import { colors, spacing } from '../../theme';
+import { spacing, useColors, type Palette } from '../../theme';
 
 export function LoadingView({ label }: { label?: string }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.container}>
       <ActivityIndicator color={colors.brand} size="large" />
@@ -12,7 +14,7 @@ export function LoadingView({ label }: { label?: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',

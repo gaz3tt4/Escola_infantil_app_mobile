@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { AlunoSwitcher, useAlunosGate } from '../components/AlunoSwitcher';
@@ -26,10 +26,11 @@ import { listarAvisos } from '../services/avisos';
 import { toApiError } from '../services/errors';
 import { apagarRecado } from '../services/recados';
 import type { Aluno, Aviso, Recado } from '../services/types';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, useColors, useTypography, type Palette } from '../theme';
 import { addDaysISO, firstName, formatDateLong, todayISO } from '../utils/format';
 
 export function AgendaScreen() {
+  const typography = useTypography();
   const { alunos, selectedAluno, selectAluno } = useAlunos();
   const gate = useAlunosGate();
   const alvo = useAgendaTarget();
@@ -55,6 +56,9 @@ export function AgendaScreen() {
 }
 
 function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const typography = useTypography();
   const navigation = useNavigation();
   const alvo = useAgendaTarget();
   const [date, setDate] = useState(() => (alvo && alvo.alunoId === aluno.id ? alvo.data : todayISO()));
@@ -189,7 +193,6 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
           <AvisosList avisos={data.avisos} />
         ) : (
           <View style={styles.vazio}>
-            <Mascote size={30} segments={3} />
             <EmptyState icon={CalendarX} title="Falta" description="O aluno não esteve na escola neste dia." />
           </View>
         )
@@ -215,7 +218,7 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
             </View>
           ) : (
             <View style={styles.vazio}>
-              <Mascote size={30} segments={3} />
+              <Mascote size={160} />
               <EmptyState
                 icon={Inbox}
                 title={agenda ? 'Agenda sem registros' : 'Sem agenda neste dia'}
@@ -275,7 +278,7 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   header: {
     gap: spacing.sm,
   },

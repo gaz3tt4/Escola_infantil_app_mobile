@@ -1,4 +1,4 @@
-import { NavigationContainer } from '@react-navigation/native';
+import { DefaultTheme, NavigationContainer, type Theme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 
@@ -12,7 +12,7 @@ import { CalendarioScreen } from '../screens/CalendarioScreen';
 import { FaturaDetalheScreen } from '../screens/FaturaDetalheScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { SemConexaoScreen } from '../screens/SemConexaoScreen';
-import { colors } from '../theme';
+import { useColors } from '../theme';
 import { MainTabs } from './MainTabs';
 import { navigationRef } from './ref';
 import type { RootStackParamList } from './types';
@@ -20,6 +20,20 @@ import type { RootStackParamList } from './types';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function RootNavigator() {
+  const colors = useColors();
+  // Tema da navegação: fundo, cartões e bordas do tema do sistema (sem flash branco no escuro).
+  const navigationTheme: Theme = {
+    dark: colors.isDark,
+    colors: {
+      primary: colors.brandDark,
+      background: colors.background,
+      card: colors.surface,
+      text: colors.textPrimary,
+      border: colors.border,
+      notification: colors.coral,
+    },
+    fonts: DefaultTheme.fonts,
+  };
   const { status, mustChangePassword } = useAuth();
 
   if (status === 'bootstrapping') {
@@ -31,7 +45,7 @@ export function RootNavigator() {
   }
 
   return (
-    <NavigationContainer ref={navigationRef}>
+    <NavigationContainer ref={navigationRef} theme={navigationTheme}>
       <NotificationsBridge />
       <Stack.Navigator
         screenOptions={{

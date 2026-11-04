@@ -1,15 +1,17 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
 import { CopyButton } from '../ui/CopyButton';
 import { Notice } from '../ui/Notice';
 import type { ResultadoPagamento } from '../../services/faturas';
-import { colors, radius, spacing } from '../../theme';
+import { radius, spacing, useColors, type Palette } from '../../theme';
 import { formatDateTimeBR } from '../../utils/format';
 
 type PixData = Extract<ResultadoPagamento, { forma: 'pix' }>;
 
 export function PixResult({ data }: { data: PixData }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   if (!data.copiaECola && !data.qrCodeBase64) {
     return <Notice message="O Pix foi gerado, mas o código não veio na resposta. Tente novamente em instantes." />;
   }
@@ -47,7 +49,7 @@ export function PixResult({ data }: { data: PixData }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   container: {
     gap: spacing.md,
     alignItems: 'center',

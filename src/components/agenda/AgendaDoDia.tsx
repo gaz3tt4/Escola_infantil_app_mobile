@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import {
@@ -19,7 +19,7 @@ import { Pill } from '../ui/Pill';
 import { RecadoItem } from '../recados/RecadoItem';
 import { temCardapio } from '../../services/agenda';
 import type { Agenda, Cardapio, Recado, RefeicaoAgenda, SonecaAgenda, TipoRefeicao } from '../../services/types';
-import { colors, spacing } from '../../theme';
+import { spacing, useColors, type Palette as ThemePalette } from '../../theme';
 
 function minutos(hora: string): number | null {
   const [h, m] = hora.split(':').map(Number);
@@ -40,6 +40,8 @@ function duracao(dormiu: string | null, acordou: string | null): string | null {
 }
 
 function Bloco({ icon, titulo, children }: { icon: LucideIcon; titulo: string; children: React.ReactNode }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <Card style={styles.bloco}>
       <View style={styles.blocoHeader}>
@@ -52,6 +54,8 @@ function Bloco({ icon, titulo, children }: { icon: LucideIcon; titulo: string; c
 }
 
 function Linha({ titulo, detalhe, observacao }: { titulo: string; detalhe?: string | null; observacao?: string | null }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.linha}>
       <View style={styles.linhaTopo}>
@@ -65,6 +69,8 @@ function Linha({ titulo, detalhe, observacao }: { titulo: string; detalhe?: stri
 
 /** Uma refeição: o que o professor registrou (se já registrou) e o cardápio do dia. */
 function Refeicao({ tipo, refeicao, cardapio }: { tipo: TipoRefeicao; refeicao?: RefeicaoAgenda; cardapio: string[] }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const aceitacao = refeicao?.aceitacao ? aceitacaoLabels[refeicao.aceitacao] : undefined;
   const recusou = refeicao?.aceitacao === 'recusou';
   return (
@@ -86,7 +92,7 @@ function Refeicao({ tipo, refeicao, cardapio }: { tipo: TipoRefeicao; refeicao?:
         <Pill
           label={aceitacao}
           bg={recusou ? colors.coralSoft : colors.brandSoft}
-          fg={recusou ? '#B23A2C' : colors.brandDark}
+          fg={recusou ? colors.coralStrong : colors.brandDark}
         />
       ) : null}
       {recusou && refeicao?.alimento_recusado ? (
@@ -157,6 +163,8 @@ interface AgendaDoDiaProps {
 }
 
 export function AgendaDoDia({ agenda, cardapio, onEditRecado, onDeleteRecado, busy }: AgendaDoDiaProps) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const semBlocos = agendaSemBlocos(agenda);
   return (
     <View style={styles.container}>
@@ -223,7 +231,7 @@ export function AgendaDoDia({ agenda, cardapio, onEditRecado, onDeleteRecado, bu
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemePalette) => StyleSheet.create({
   container: {
     gap: spacing.md,
   },

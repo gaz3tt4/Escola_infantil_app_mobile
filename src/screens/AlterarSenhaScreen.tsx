@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useRef, useState, useMemo } from 'react';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInputInstance, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '../components/ui/Button';
@@ -9,7 +9,7 @@ import { Notice } from '../components/ui/Notice';
 import { TextField } from '../components/ui/TextField';
 import { useAuth } from '../context/AuthContext';
 import { toApiError } from '../services/errors';
-import { colors, spacing, typography } from '../theme';
+import { spacing, useColors, makeTypography, type Palette } from '../theme';
 
 /** Mesmo mínimo do backend (Password::min(8)). */
 const MIN_LENGTH = 8;
@@ -46,6 +46,8 @@ function mapServerErrors(fieldErrors: Record<string, string>): FieldErrors {
  * - Voluntária: aberta pelo Perfil.
  */
 export function AlterarSenhaScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { mustChangePassword, changePassword, logout } = useAuth();
   const navigation = useNavigation();
   const forced = mustChangePassword;
@@ -57,8 +59,8 @@ export function AlterarSenhaScreen() {
   const [formError, setFormError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const novaRef = useRef<TextInput>(null);
-  const confirmacaoRef = useRef<TextInput>(null);
+  const novaRef = useRef<TextInputInstance>(null);
+  const confirmacaoRef = useRef<TextInputInstance>(null);
 
   async function handleSubmit() {
     const localErrors = validate(atual, nova, confirmacao);
@@ -94,7 +96,7 @@ export function AlterarSenhaScreen() {
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       {forced ? (
         <View style={styles.header}>
-          <Mascote size={36} segments={3} />
+          <Mascote size={96} />
           <Text style={styles.title}>Crie uma nova senha</Text>
           <Text style={styles.subtitle}>
             Por segurança, troque a senha provisória que você recebeu da escola antes de continuar.
@@ -180,7 +182,9 @@ export function AlterarSenhaScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => {
+  const typography = makeTypography(colors);
+  return StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.background,
@@ -221,3 +225,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+};

@@ -11,7 +11,7 @@ import { ScreenContainer } from '../components/ui/ScreenContainer';
 import { useAsyncResource } from '../hooks/useAsyncResource';
 import { listarCalendario } from '../services/calendario';
 import type { DataCalendario } from '../services/types';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, useColors, useTypography, type Palette } from '../theme';
 import {
   agruparPorDia,
   corValida,
@@ -26,6 +26,9 @@ import { formatDateBR, todayISO } from '../utils/format';
 const SEM_DATAS: DataCalendario[] = [];
 
 export function CalendarioScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const typography = useTypography();
   const hoje = todayISO();
   const [ano, setAno] = useState(() => Number(hoje.slice(0, 4)));
   const [mes, setMes] = useState(() => Number(hoje.slice(5, 7)) - 1);
@@ -136,6 +139,8 @@ interface DiaProps {
 }
 
 function Dia({ dia, iso, datas, hoje, selecionado, onSelect }: DiaProps) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   if (!dia || !iso) return <View style={styles.celula} />;
 
   const fundo = datas.length > 0 ? corValida(datas[0].cor, colors.brand) : undefined;
@@ -170,6 +175,8 @@ function Dia({ dia, iso, datas, hoje, selecionado, onSelect }: DiaProps) {
 }
 
 function DataCard({ item, mostrarDia }: { item: DataCalendario; mostrarDia: boolean }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const cor = corValida(item.cor, colors.brand);
   return (
     <Card style={styles.dataCard}>
@@ -183,7 +190,7 @@ function DataCard({ item, mostrarDia }: { item: DataCalendario; mostrarDia: bool
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   mesNav: {
     flexDirection: 'row',
     alignItems: 'center',

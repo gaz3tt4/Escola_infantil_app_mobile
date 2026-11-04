@@ -1,86 +1,185 @@
-import React, { useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  AccessibilityInfo,
+  Keyboard,
+  KeyboardAvoidingView,
+  LayoutAnimation,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInputInstance,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AuthTextField } from '../components/login/AuthTextField';
+import { PrimaryButton } from '../components/login/PrimaryButton';
 import { AmbienteBadge } from '../components/ui/AmbienteBadge';
-import { Button } from '../components/ui/Button';
+import { Icon } from '../components/ui/Icon';
 import { Mascote } from '../components/ui/Mascote';
-import { Notice } from '../components/ui/Notice';
-import { TextField } from '../components/ui/TextField';
+import { ArrowRight, CircleAlert, Lock, Mail } from '../components/ui/icons';
 import { useAuth } from '../context/AuthContext';
-import { errorMessage } from '../services/errors';
-import { colors, spacing } from '../theme';
+import { type } from '../theme/fonts';
+import { ds, useTokens } from '../theme/tokens';
+import { emailValido, mensagemDeLogin } from '../utils/loginErrors';
+
+const DURACAO_MS = 150;
+
+/** true enquanto o teclado está aberto; anima a mudança só se "reduzir movimento" estiver desligado. */
+function useTecladoAberto(): boolean {
+  const [aberto, setAberto] = useState(false);
+
+  useEffect(() => {
+    let reduzir = false;
+    AccessibilityInfo.isReduceMotionEnabled().then((valor) => {
+      reduzir = valor;
+    });
+    const mudar = (valor: boolean) => {
+      if (!reduzir) {
+        LayoutAnimation.configureNext(LayoutAnimation.create(DURACAO_MS, 'easeInEaseOut', 'opacity'));
+      }
+      setAberto(valor);
+    };
+    const mostrar = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow', () =>
+      mudar(true)
+    );
+    const esconder = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide', () =>
+      mudar(false)
+    );
+    return () => {
+      mostrar.remove();
+      esconder.remove();
+    };
+  }, []);
+
+  return aberto;
+}
 
 export function LoginScreen() {
+  const t = useTokens();
+  const { height } = useWindowDimensions();
   const { login, notice } = useAuth();
+  const tecladoAberto = useTecladoAberto();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const passwordRef = useRef<TextInput>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const passwordRef = useRef<TextInputInstance>(null);
+
+  // Tudo numa tela sem rolar (iPhone SE: 667 pt de altura): o mascote cede espaço em telas baixas
+  // e encolhe de vez com o teclado aberto.
+  const mascote = tecladoAberto ? 72 : height < 700 ? 112 : 160;
 
   async function handleSubmit() {
+    if (submitting) return;
     const trimmedEmail = email.trim();
-    if (!trimmedEmail || !password) {
-      setError('Informe seu e-mail e sua senha.');
-      return;
-    }
-    setError(null);
+    const emailMsg = emailValido(trimmedEmail) ? null : 'Informe um e-mail válido.';
+    const passwordMsg = password ? null : 'Informe sua senha.';
+    setEmailError(emailMsg);
+    setPasswordError(passwordMsg);
+    setApiError(null);
+    if (emailMsg || passwordMsg) return;
+
+    Keyboard.dismiss();
     setSubmitting(true);
     try {
       await login(trimmedEmail, password);
+      // Sucesso: o RootNavigator troca a pilha de login pela Agenda (sem rota para voltar).
     } catch (err) {
-      setError(errorMessage(err));
+      setApiError(mensagemDeLogin(err));
       setSubmitting(false);
     }
   }
 
-  const message = error ?? notice;
-
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.flex, { backgroundColor: t.surface }]}>
+      <StatusBar style={t.dark ? 'light' : 'dark'} />
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        {/* Com o teclado fechado tudo cabe e não rola; aberto, pode rolar se faltar espaço. */}
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          scrollEnabled={tecladoAberto}
+          bounces={false}
+        >
           <View style={styles.brand}>
-            <Mascote size={44} segments={4} />
-            <Text style={styles.title}>Centopeia</Text>
-            <Text style={styles.subtitle}>Acompanhe a rotina escolar do seu filho</Text>
+            <Mascote size={mascote} />
+            <View style={styles.brandText}>
+              <Text style={[type.display, styles.center, { color: t.ink }]} accessibilityRole="header">
+                Centopeia
+              </Text>
+              <Text style={[type.body, styles.center, { color: t.inkMuted }]}>Escola infantil</Text>
+            </View>
             <AmbienteBadge />
           </View>
 
           <View style={styles.form}>
-            <TextField
+            <AuthTextField
               label="E-mail"
+              icon={Mail}
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(value) => {
+                setEmail(value);
+                if (emailError) setEmailError(null);
+              }}
+              error={emailError}
+              placeholder="voce@email.com"
+              keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
-              autoComplete="email"
-              keyboardType="email-address"
               textContentType="username"
-              placeholder="seu@email.com"
+              autoComplete="email"
               returnKeyType="next"
               onSubmitEditing={() => passwordRef.current?.focus()}
               editable={!submitting}
             />
 
-            <TextField
+            <AuthTextField
               ref={passwordRef}
               label="Senha"
+              icon={Lock}
               password
               value={password}
-              onChangeText={setPassword}
-              autoComplete="current-password"
-              textContentType="password"
+              onChangeText={(value) => {
+                setPassword(value);
+                if (passwordError) setPasswordError(null);
+              }}
+              error={passwordError}
               placeholder="Sua senha"
+              autoCapitalize="none"
+              autoCorrect={false}
+              textContentType="password"
+              autoComplete="current-password"
               returnKeyType="go"
               onSubmitEditing={handleSubmit}
               editable={!submitting}
             />
 
-            {message ? <Notice message={message} tone={error ? 'error' : 'info'} /> : null}
+            {apiError ? (
+              <View style={[styles.alert, { backgroundColor: t.dangerSoft }]} accessibilityRole="alert">
+                <Icon icon={CircleAlert} size="sm" color={t.danger} />
+                <Text style={[type.bodySm, styles.alertText, { color: t.danger }]}>{apiError}</Text>
+              </View>
+            ) : notice ? (
+              <View style={[styles.alert, { backgroundColor: t.warningSoft }]} accessibilityRole="alert">
+                <Text style={[type.bodySm, styles.alertText, { color: t.warning }]}>{notice}</Text>
+              </View>
+            ) : null}
 
-            <Button title="Entrar" onPress={handleSubmit} loading={submitting} />
+            <PrimaryButton
+              title="Entrar"
+              loadingTitle="Entrando..."
+              icon={ArrowRight}
+              loading={submitting}
+              onPress={handleSubmit}
+            />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -89,36 +188,38 @@ export function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
   flex: {
     flex: 1,
   },
-  container: {
+  scroll: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xl,
-    gap: spacing.xl,
+    paddingHorizontal: ds.margin,
+    paddingVertical: ds.space[4],
+    gap: ds.space[6],
   },
   brand: {
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: ds.space[2],
   },
-  title: {
-    fontSize: 30,
-    fontWeight: '800',
-    color: colors.brandDark,
-    marginTop: spacing.sm,
+  brandText: {
+    alignItems: 'center',
   },
-  subtitle: {
-    fontSize: 14,
-    color: colors.textSecondary,
+  center: {
     textAlign: 'center',
   },
   form: {
-    gap: spacing.md,
+    gap: ds.space[4],
+  },
+  alert: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: ds.space[2],
+    borderRadius: ds.radius.md,
+    paddingVertical: ds.space[3],
+    paddingHorizontal: ds.space[3],
+  },
+  alertText: {
+    flex: 1,
   },
 });

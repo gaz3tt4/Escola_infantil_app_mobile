@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { PERIODO_LABEL } from '../../services/alunos';
 import type { Aluno } from '../../services/types';
-import { colors, spacing } from '../../theme';
+import { spacing, useColors, type Palette } from '../../theme';
 
 function initials(name: string): string {
   return name
@@ -23,6 +23,8 @@ export function alunoMeta(aluno: Aluno): string {
 }
 
 export function ChildHeader({ aluno }: { aluno: Aluno }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.container}>
       <View style={styles.avatar}>
@@ -36,7 +38,7 @@ export function ChildHeader({ aluno }: { aluno: Aluno }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',

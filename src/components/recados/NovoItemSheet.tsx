@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { StyleSheet, Text } from 'react-native';
 
 import { ReceitaPicker } from './ReceitaPicker';
@@ -10,7 +10,7 @@ import { toApiError } from '../../services/errors';
 import { atualizarMedicamento, criarMedicamento, type ArquivoReceita } from '../../services/medicamentos';
 import { editarRecado, enviarRecado, TEXTO_RECADO_MAX } from '../../services/recados';
 import type { Aluno, Medicamento, Recado } from '../../services/types';
-import { colors } from '../../theme';
+import { useColors, type Palette } from '../../theme';
 import { formatDateBR, formatDateTimeBR, maskDateBR, parseDateBR, todayISO } from '../../utils/format';
 
 type Aba = 'recado' | 'medicamento';
@@ -44,6 +44,8 @@ function hoje(): string {
 
 /** Formulário em bottom sheet: recado ao professor ou medicamento (com receita obrigatória). */
 export function NovoItemSheet({ modo, visible, aluno, medicamento, recado, onClose, onSent }: NovoItemSheetProps) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const edicao = medicamento ?? null;
   const recadoEdicao = recado ?? null;
   const aba = modo;
@@ -225,7 +227,7 @@ export function NovoItemSheet({ modo, visible, aluno, medicamento, recado, onClo
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   multiline: {
     minHeight: 110,
     textAlignVertical: 'top',

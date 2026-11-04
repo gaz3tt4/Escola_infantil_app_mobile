@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from './Icon';
 import { X } from './icons';
-import { colors, radius, spacing } from '../../theme';
+import { radius, spacing, useColors, type Palette } from '../../theme';
 
 interface BottomSheetProps {
   visible: boolean;
@@ -15,6 +15,8 @@ interface BottomSheetProps {
 }
 
 export function BottomSheet({ visible, title, subtitle, onClose, children }: BottomSheetProps) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
 
   return (
@@ -46,7 +48,7 @@ export function BottomSheet({ visible, title, subtitle, onClose, children }: Bot
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   backdrop: {
     flex: 1,
     justifyContent: 'flex-end',

@@ -2,7 +2,7 @@ import type { LucideIcon } from 'lucide-react-native';
 import React from 'react';
 import { View } from 'react-native';
 
-import { colors, type ColorToken } from '../../theme';
+import { type ColorToken, useColors } from '../../theme';
 
 /** Tamanhos do design system do painel web: 16 px (sm) e 24 px (md). */
 const SIZES = { sm: 16, md: 24 } as const;
@@ -26,6 +26,7 @@ interface IconProps {
 
 /** Ícone Lucide do app: traço 1,8, tamanhos sm/md, cor do tema e acessibilidade como no painel web. */
 export function Icon({ icon: Glyph, size = 'md', color = 'textPrimary', label }: IconProps) {
+  const colors = useColors();
   const resolved = color in colors ? colors[color as ColorToken] : color;
   const pixels = SIZES[size];
 

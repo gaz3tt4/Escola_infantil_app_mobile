@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { BoletoResult } from './BoletoResult';
@@ -10,7 +10,7 @@ import { Notice } from '../ui/Notice';
 import { errorMessage } from '../../services/errors';
 import { pagarFatura, type FormaPagamento, type ResultadoPagamento } from '../../services/faturas';
 import type { Fatura } from '../../services/types';
-import { colors, spacing } from '../../theme';
+import { spacing, useColors, type Palette } from '../../theme';
 import { formatCurrencyBRL } from '../../utils/format';
 
 interface PagamentoSheetProps {
@@ -22,6 +22,8 @@ interface PagamentoSheetProps {
 
 /** Escolha Pix/Boleto → POST /faturas/{id}/pagamento → QR code ou boleto. */
 export function PagamentoSheet({ fatura, visible, onClose }: PagamentoSheetProps) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ResultadoPagamento | null>(null);
@@ -75,7 +77,7 @@ export function PagamentoSheet({ fatura, visible, onClose }: PagamentoSheetProps
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   loading: {
     alignItems: 'center',
     gap: spacing.sm,

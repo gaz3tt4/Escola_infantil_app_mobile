@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { AlunoSwitcher, useAlunosGate } from '../components/AlunoSwitcher';
@@ -20,10 +20,12 @@ import { obterMatriculaAtiva, PERIODO_LABEL } from '../services/alunos';
 import { getMe } from '../services/auth';
 import { obterResumoDoAluno } from '../services/perfil';
 import type { Aluno, Responsavel } from '../services/types';
-import { colors, spacing, typography } from '../theme';
+import { spacing, useColors, useTypography, type Palette } from '../theme';
 import { firstName, formatCPF, formatCurrencyBRL, formatDateBR, formatTelefone } from '../utils/format';
 
 function InfoRow({ label, value }: { label: string; value: string | null }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.row}>
       <Text style={styles.rowLabel}>{label}</Text>
@@ -33,6 +35,9 @@ function InfoRow({ label, value }: { label: string; value: string | null }) {
 }
 
 export function PerfilScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const typography = useTypography();
   const navigation = useNavigation();
   const { logout } = useAuth();
   const alunos = useAlunos();
@@ -64,7 +69,7 @@ export function PerfilScreen() {
           <Text style={styles.headerSubtitle}>Seus dados e dos seus filhos</Text>
           <AmbienteBadge />
         </View>
-        <Mascote size={26} segments={3} />
+        <Mascote size={40} />
       </View>
 
       <ResponsavelCard data={me.data} error={me.error} isLoading={me.isLoading} onRetry={me.reload} />
@@ -91,6 +96,9 @@ function ResponsavelCard({
   isLoading: boolean;
   onRetry: () => void;
 }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const typography = useTypography();
   return (
     <Card style={styles.card}>
       <Text style={typography.sectionTitle}>Responsável</Text>
@@ -110,6 +118,9 @@ function ResponsavelCard({
 
 /** Dados do aluno em foco: matrícula (API real) + resumo do mês (mock; os recados têm aba própria). */
 function AlunoSection({ aluno }: { aluno: Aluno }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const typography = useTypography();
   const loader = useCallback(
     () =>
       Promise.all([obterMatriculaAtiva(aluno.id), obterResumoDoAluno(aluno.id)]).then(([matricula, resumo]) => ({
@@ -155,7 +166,7 @@ function AlunoSection({ aluno }: { aluno: Aluno }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -53,5 +53,5 @@ export function textoSobre(fundo: string): string {
     return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
   };
   const lum = 0.2126 * canal((n >> 16) & 255) + 0.7152 * canal((n >> 8) & 255) + 0.0722 * canal(n & 255);
-  return lum > 0.4 ? '#26301C' : '#FFFFFF';
+  return lum > 0.4 ? '#1b1d26' : '#ffffff';
 }

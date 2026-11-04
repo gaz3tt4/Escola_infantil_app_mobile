@@ -1,8 +1,10 @@
-import React from 'react';
+import { BottomTabBarHeightContext } from '@react-navigation/bottom-tabs';
+import React, { useContext, useMemo } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View, type ScrollViewProps, type ViewProps } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
-import { colors, spacing } from '../../theme';
+import { useFloatingTabBarInset } from '../../navigation/floatingTabBar';
+import { spacing, useColors, type Palette } from '../../theme';
 
 interface ScreenContainerProps extends ViewProps {
   scroll?: boolean;
@@ -27,10 +29,18 @@ export function ScreenContainer({
   footer,
   ...rest
 }: ScreenContainerProps) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  // Dentro das abas a barra flutua sobre o conteúdo: reserva o espaço dela embaixo, e o rodapé
+  // fixo (ex.: ciência) fica acima dela. Telas empilhadas (detalhe, calendário) não têm barra.
+  const inTabs = useContext(BottomTabBarHeightContext) !== undefined;
+  const tabInset = useFloatingTabBarInset();
+  const bottomSpace = inTabs ? { paddingBottom: tabInset } : null;
+
   if (!scroll) {
     return (
       <SafeAreaView style={styles.safe} edges={edges}>
-        <View style={[styles.container, style]} {...rest}>
+        <View style={[styles.container, bottomSpace, style]} {...rest}>
           {children}
         </View>
       </SafeAreaView>
@@ -41,7 +51,7 @@ export function ScreenContainer({
     <SafeAreaView style={styles.safe} edges={edges}>
       <ScrollView
         {...scrollProps}
-        contentContainerStyle={[styles.container, style]}
+        contentContainerStyle={[styles.container, bottomSpace, style]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           onRefresh ? (
@@ -51,12 +61,12 @@ export function ScreenContainer({
       >
         {children}
       </ScrollView>
-      {footer}
+      {footer ? <View style={inTabs ? { marginBottom: tabInset - spacing.md } : undefined}>{footer}</View> : null}
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.background,

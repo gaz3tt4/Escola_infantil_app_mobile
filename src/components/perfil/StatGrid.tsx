@@ -6,7 +6,7 @@ import type { LucideIcon } from 'lucide-react-native';
 import { Icon } from '../ui/Icon';
 import { CalendarX, Moon, Palette } from '../ui/icons';
 import type { ResumoAluno } from '../../services/perfil';
-import { colors, radius, spacing } from '../../theme';
+import { radius, spacing, useColors } from '../../theme';
 
 interface StatItem {
   icon: LucideIcon;
@@ -17,15 +17,16 @@ interface StatItem {
 }
 
 export function StatGrid({ resumo }: { resumo: ResumoAluno }) {
+  const colors = useColors();
   const items: StatItem[] = [
     { icon: CalendarX, label: 'Faltas', value: String(resumo.faltas), bg: colors.coralSoft, fg: colors.danger },
-    { icon: Palette, label: 'Atividades', value: String(resumo.atividades), bg: colors.skySoft, fg: '#1E6FA8' },
+    { icon: Palette, label: 'Atividades', value: String(resumo.atividades), bg: colors.skySoft, fg: colors.skyStrong },
     {
       icon: Moon,
       label: 'Sonecas',
       value: `${resumo.sonecas.quantidade} · ${resumo.sonecas.duracaoMediaMin}min`,
       bg: colors.lavenderSoft,
-      fg: '#5B4FBF',
+      fg: colors.lavenderStrong,
     },
   ];
 

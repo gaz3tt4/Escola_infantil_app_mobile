@@ -14,12 +14,15 @@ import { ScreenContainer } from '../components/ui/ScreenContainer';
 import { useAsyncResource } from '../hooks/useAsyncResource';
 import { listarFaturasDosMeusAlunos, podePagar, type FaturaComAluno } from '../services/faturas';
 import { CircleCheck, Backpack } from '../components/ui/icons';
-import { colors, spacing, typography } from '../theme';
+import { spacing, useColors, useTypography, type Palette } from '../theme';
 import { formatCurrencyBRL } from '../utils/format';
 
 type Filtro = number | 'todos';
 
 export function PagamentosScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const typography = useTypography();
   const navigation = useNavigation();
   const { data, error, isLoading, isRefreshing, reload } = useAsyncResource(listarFaturasDosMeusAlunos);
   const [filtro, setFiltro] = useState<Filtro>('todos');
@@ -137,7 +140,7 @@ export function PagamentosScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   header: {
     gap: spacing.md,
   },
