@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { colors, radius, spacing } from '../../theme';
+import { radius, spacing, useColors, type Palette } from '../../theme';
 
 export interface ChipOption<T extends string | number> {
   value: T;
@@ -17,6 +17,8 @@ interface ChipSelectorProps<T extends string | number> {
 }
 
 export function ChipSelector<T extends string | number>({ options, value, onChange, scroll = true }: ChipSelectorProps<T>) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const chips = options.map((option) => {
     const selected = option.value === value;
     return (
@@ -44,7 +46,7 @@ export function ChipSelector<T extends string | number>({ options, value, onChan
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   row: {
     gap: spacing.sm,
   },

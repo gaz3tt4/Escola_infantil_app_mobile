@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   ActivityIndicator,
   GestureResponderEvent,
@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 
-import { colors, radius, spacing } from '../../theme';
+import { radius, spacing, useColors, type Palette } from '../../theme';
 
 interface ButtonProps {
   title: string;
@@ -18,6 +18,8 @@ interface ButtonProps {
 }
 
 export function Button({ title, onPress, variant = 'primary', loading, disabled }: ButtonProps) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const isDisabled = disabled || loading;
 
   return (
@@ -50,7 +52,7 @@ export function Button({ title, onPress, variant = 'primary', loading, disabled 
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   base: {
     borderRadius: radius.pill,
     paddingVertical: spacing.md - 2,

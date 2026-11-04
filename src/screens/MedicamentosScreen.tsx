@@ -17,11 +17,12 @@ import { useAsyncResource } from '../hooks/useAsyncResource';
 import { toApiError } from '../services/errors';
 import { apagarMedicamento, listarMedicamentos } from '../services/medicamentos';
 import type { Aluno, Medicamento } from '../services/types';
-import { spacing, typography } from '../theme';
+import { spacing, useTypography } from '../theme';
 import { firstName } from '../utils/format';
 
 /** Medicamentos do aluno (os recados ficam na Agenda do dia). */
 export function MedicamentosScreen() {
+  const typography = useTypography();
   const { selectedAluno } = useAlunos();
   const gate = useAlunosGate();
 
@@ -36,6 +37,7 @@ export function MedicamentosScreen() {
 }
 
 function MedicamentosDoAluno({ aluno }: { aluno: Aluno }) {
+  const typography = useTypography();
   const loader = useCallback(() => listarMedicamentos(aluno.id), [aluno.id]);
   const { data: medicamentos, error, isLoading, isRefreshing, reload } = useAsyncResource(loader);
   const [sheetAberto, setSheetAberto] = useState(false);

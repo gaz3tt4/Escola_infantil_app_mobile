@@ -1,10 +1,10 @@
 import { BottomTabBarHeightContext } from '@react-navigation/bottom-tabs';
-import React, { useContext } from 'react';
+import React, { useContext, useMemo } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View, type ScrollViewProps, type ViewProps } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
 import { useFloatingTabBarInset } from '../../navigation/floatingTabBar';
-import { colors, spacing } from '../../theme';
+import { spacing, useColors, type Palette } from '../../theme';
 
 interface ScreenContainerProps extends ViewProps {
   scroll?: boolean;
@@ -29,6 +29,8 @@ export function ScreenContainer({
   footer,
   ...rest
 }: ScreenContainerProps) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   // Dentro das abas a barra flutua sobre o conteúdo: reserva o espaço dela embaixo, e o rodapé
   // fixo (ex.: ciência) fica acima dela. Telas empilhadas (detalhe, calendário) não têm barra.
   const inTabs = useContext(BottomTabBarHeightContext) !== undefined;
@@ -64,7 +66,7 @@ export function ScreenContainer({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.background,

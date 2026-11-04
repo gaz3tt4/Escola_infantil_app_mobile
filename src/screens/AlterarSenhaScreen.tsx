@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInputInstance, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -9,7 +9,7 @@ import { Notice } from '../components/ui/Notice';
 import { TextField } from '../components/ui/TextField';
 import { useAuth } from '../context/AuthContext';
 import { toApiError } from '../services/errors';
-import { colors, spacing, typography } from '../theme';
+import { spacing, useColors, makeTypography, type Palette } from '../theme';
 
 /** Mesmo mínimo do backend (Password::min(8)). */
 const MIN_LENGTH = 8;
@@ -46,6 +46,8 @@ function mapServerErrors(fieldErrors: Record<string, string>): FieldErrors {
  * - Voluntária: aberta pelo Perfil.
  */
 export function AlterarSenhaScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { mustChangePassword, changePassword, logout } = useAuth();
   const navigation = useNavigation();
   const forced = mustChangePassword;
@@ -180,7 +182,9 @@ export function AlterarSenhaScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => {
+  const typography = makeTypography(colors);
+  return StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.background,
@@ -221,3 +225,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+};

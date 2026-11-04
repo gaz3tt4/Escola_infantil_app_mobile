@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { PaymentMethodPicker } from './PaymentMethodPicker';
@@ -10,7 +10,7 @@ import { TextField } from '../ui/TextField';
 import { toApiError } from '../../services/errors';
 import { gerarCobrancaAvulsa, TIPO_LABEL, type FaturaComAluno, type FormaPagamento } from '../../services/faturas';
 import type { Aluno, Fatura, TipoFatura } from '../../services/types';
-import { colors, spacing } from '../../theme';
+import { spacing, useColors, type Palette } from '../../theme';
 import { maskDateBR, parseDateBR, todayISO } from '../../utils/format';
 
 interface CobrancaAvulsaSheetProps {
@@ -28,6 +28,8 @@ type FieldErrors = Partial<Record<'vencimento' | 'tipo' | 'forma', string>>;
 
 /** POST /alunos/{id}/faturas/avulsa: adiantar mensalidade ou gerar a cobrança da matrícula. */
 export function CobrancaAvulsaSheet({ visible, alunos, faturas, alunoInicialId, onClose, onCreated }: CobrancaAvulsaSheetProps) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [alunoId, setAlunoId] = useState<number | null>(alunoInicialId);
   const [tipo, setTipo] = useState<TipoFatura>('mensalidade');
   const [forma, setForma] = useState<FormaPagamento>('pix');
@@ -159,7 +161,7 @@ export function CobrancaAvulsaSheet({ visible, alunos, faturas, alunoInicialId, 
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   group: {
     gap: spacing.sm,
   },

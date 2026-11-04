@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { BottomSheet } from '../ui/BottomSheet';
 import { Button } from '../ui/Button';
 import { Mascote } from '../ui/Mascote';
 import { Notice } from '../ui/Notice';
-import { colors, spacing } from '../../theme';
+import { spacing, useColors, type Palette } from '../../theme';
 
 interface CienciaSheetProps {
   visible: boolean;
@@ -17,6 +17,8 @@ interface CienciaSheetProps {
 
 /** Pop-up de confirmação de ciência, aberto ao chegar ao fim da agenda. */
 export function CienciaSheet({ visible, loading, error, onConfirm, onClose }: CienciaSheetProps) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <BottomSheet visible={visible} title="Confirmar ciência" onClose={loading ? () => undefined : onClose}>
       <View style={styles.body}>
@@ -40,6 +42,8 @@ export function CienciaBarra({
   error: string | null;
   onConfirm: () => void;
 }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.barra}>
       {error ? <Notice message={error} /> : null}
@@ -48,7 +52,7 @@ export function CienciaBarra({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   body: {
     alignItems: 'center',
     gap: spacing.sm,

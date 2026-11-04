@@ -28,14 +28,23 @@ export interface Tokens {
   successSoft: string;
   focus: string;
   focusSoft: string;
+  // Apoio (pílulas de status, avisos e fundos de tela): cores que não estão na lista base do design system.
+  skySoft: string;
+  skyStrong: string;
+  lavenderSoft: string;
+  lavenderStrong: string;
+  mintSoft: string;
+  sunny: string;
+  overlay: string;
   dark: boolean;
 }
 
 export const lightTokens: Tokens = {
-  surface: '#f7f8fb',
+  // Fundo verde sutil (pouco saturado, perto do branco); cards seguem brancos.
+  surface: '#f2f7ec',
   surfaceRaised: '#ffffff',
-  surfaceSunken: '#f1f3f7',
-  line: '#e7e9ef',
+  surfaceSunken: '#e8f0df',
+  line: '#dce6d1',
   lineStrong: '#8a90a0',
   ink: '#1b1d26',
   inkMuted: '#626878',
@@ -56,14 +65,22 @@ export const lightTokens: Tokens = {
   successSoft: '#e0f4f1',
   focus: '#84cc3a',
   focusSoft: '#eef8e2',
+  skySoft: '#e4f4fc',
+  skyStrong: '#1e6fa8',
+  lavenderSoft: '#edeafd',
+  lavenderStrong: '#5b4fbf',
+  mintSoft: '#e1fbf4',
+  sunny: '#ffc53d',
+  overlay: 'rgba(0,0,0,0.4)',
   dark: false,
 };
 
 export const darkTokens: Tokens = {
-  surface: '#13151b',
-  surfaceRaised: '#1b1e26',
-  surfaceSunken: '#171a21',
-  line: '#2a2e39',
+  // Toque mínimo de verde no escuro, sem perder contraste.
+  surface: '#131814',
+  surfaceRaised: '#1b201c',
+  surfaceSunken: '#171b18',
+  line: '#2b322d',
   lineStrong: '#6b7282',
   ink: '#e8eaf2',
   inkMuted: '#9aa1b2',
@@ -84,6 +101,13 @@ export const darkTokens: Tokens = {
   successSoft: '#0f2e2b',
   focus: '#84cc3a',
   focusSoft: '#22331a',
+  skySoft: '#14283a',
+  skyStrong: '#6cc1f0',
+  lavenderSoft: '#262046',
+  lavenderStrong: '#b9afff',
+  mintSoft: '#0f2e2b',
+  sunny: '#f0c04a',
+  overlay: 'rgba(0,0,0,0.6)',
   dark: true,
 };
 

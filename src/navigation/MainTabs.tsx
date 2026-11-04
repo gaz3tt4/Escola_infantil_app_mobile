@@ -9,7 +9,7 @@ import { PagamentosScreen } from '../screens/PagamentosScreen';
 import { PerfilScreen } from '../screens/PerfilScreen';
 import { MedicamentosScreen } from '../screens/MedicamentosScreen';
 import { usePendencias } from '../context/PendenciasContext';
-import { colors } from '../theme';
+import { useColors } from '../theme';
 import type { MainTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -23,6 +23,7 @@ const TAB_ICONS: Record<keyof MainTabParamList, LucideIcon> = {
 };
 
 export function MainTabs() {
+  const colors = useColors();
   const { pendentes } = usePendencias();
 
   return (

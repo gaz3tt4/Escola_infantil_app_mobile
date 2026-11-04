@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { Card } from '../ui/Card';
@@ -7,7 +7,7 @@ import { Pill as PillIcon } from '../ui/icons';
 import { Pill } from '../ui/Pill';
 import { medicamentoEditavel } from '../../services/medicamentos';
 import type { Medicamento } from '../../services/types';
-import { colors, spacing } from '../../theme';
+import { spacing, useColors, type Palette } from '../../theme';
 import { formatDateBR, formatDateTimeBR } from '../../utils/format';
 
 /** Medicamento informado pelo responsável, com a confirmação da escola. */
@@ -22,6 +22,8 @@ export function MedicamentoItem({
   onDelete?: (medicamento: Medicamento) => void;
   busy?: boolean;
 }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   // Só o autor, no prazo e antes de administrado; fora disso as ações somem.
   const editavel = medicamentoEditavel(medicamento);
   const status = medicamento.administrado
@@ -65,7 +67,7 @@ export function MedicamentoItem({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   card: {
     gap: spacing.xs,
   },
