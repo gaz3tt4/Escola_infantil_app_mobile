@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import React, { useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInputInstance, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '../components/ui/Button';
@@ -57,8 +57,8 @@ export function AlterarSenhaScreen() {
   const [formError, setFormError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const novaRef = useRef<TextInput>(null);
-  const confirmacaoRef = useRef<TextInput>(null);
+  const novaRef = useRef<TextInputInstance>(null);
+  const confirmacaoRef = useRef<TextInputInstance>(null);
 
   async function handleSubmit() {
     const localErrors = validate(atual, nova, confirmacao);

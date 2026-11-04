@@ -1,5 +1,5 @@
 import React, { forwardRef, useState } from 'react';
-import { StyleSheet, Text, TextInput, TextInputProps, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TextInput, TextInputInstance, TextInputProps, TouchableOpacity, View } from 'react-native';
 
 import { colors, radius, spacing } from '../../theme';
 
@@ -10,7 +10,7 @@ interface TextFieldProps extends TextInputProps {
   password?: boolean;
 }
 
-export const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
+export const TextField = forwardRef<TextInputInstance, TextFieldProps>(function TextField(
   { label, error, password, style, ...rest },
   ref
 ) {
