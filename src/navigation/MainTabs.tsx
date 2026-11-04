@@ -2,8 +2,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import type { LucideIcon } from 'lucide-react-native';
 import React from 'react';
 
+import { FloatingTabBar } from '../components/FloatingTabBar';
 import { AgendaScreen } from '../screens/AgendaScreen';
-import { Icon } from '../components/ui/Icon';
 import { BookOpen, CreditCard, Pill, User } from '../components/ui/icons';
 import { PagamentosScreen } from '../screens/PagamentosScreen';
 import { PerfilScreen } from '../screens/PerfilScreen';
@@ -27,25 +27,9 @@ export function MainTabs() {
 
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarActiveTintColor: colors.brandDark,
-        tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: {
-          borderTopColor: colors.border,
-          height: 64,
-          paddingBottom: 10,
-          paddingTop: 8,
-        },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600',
-        },
-        // Aba ativa na cor da marca; inativa em cinza do tema.
-        tabBarIcon: ({ focused }) => (
-          <Icon icon={TAB_ICONS[route.name as keyof MainTabParamList]} color={focused ? 'brandDark' : 'textMuted'} />
-        ),
-      })}
+      // Barra flutuante (pílula) própria; ela some com o teclado aberto.
+      tabBar={(props) => <FloatingTabBar {...props} icons={TAB_ICONS} />}
+      screenOptions={{ headerShown: false }}
     >
       <Tab.Screen
         name="Agenda"
