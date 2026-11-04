@@ -94,7 +94,7 @@ export function AlterarSenhaScreen() {
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       {forced ? (
         <View style={styles.header}>
-          <Mascote size={36} segments={3} />
+          <Mascote size={96} />
           <Text style={styles.title}>Crie uma nova senha</Text>
           <Text style={styles.subtitle}>
             Por segurança, troque a senha provisória que você recebeu da escola antes de continuar.

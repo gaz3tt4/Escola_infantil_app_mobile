@@ -71,7 +71,7 @@ function MedicamentosDoAluno({ aluno }: { aluno: Aluno }) {
       <View style={styles.header}>
         <View style={styles.titleRow}>
           <Text style={typography.title}>Medicamentos de {firstName(aluno.nome)}</Text>
-          <Mascote size={22} segments={3} />
+          <Mascote size={40} />
         </View>
         <AlunoSwitcher />
         <Button

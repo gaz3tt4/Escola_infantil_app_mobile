@@ -20,7 +20,7 @@ export function CienciaSheet({ visible, loading, error, onConfirm, onClose }: Ci
   return (
     <BottomSheet visible={visible} title="Confirmar ciência" onClose={loading ? () => undefined : onClose}>
       <View style={styles.body}>
-        <Mascote size={30} segments={3} />
+        <Mascote size={96} />
         <Text style={styles.text}>Você leu a agenda de hoje e está ciente das informações do dia?</Text>
       </View>
       {error ? <Notice message={error} /> : null}

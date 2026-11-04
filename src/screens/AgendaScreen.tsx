@@ -189,7 +189,6 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
           <AvisosList avisos={data.avisos} />
         ) : (
           <View style={styles.vazio}>
-            <Mascote size={30} segments={3} />
             <EmptyState icon={CalendarX} title="Falta" description="O aluno não esteve na escola neste dia." />
           </View>
         )
@@ -215,7 +214,7 @@ function AgendaDoAluno({ aluno }: { aluno: Aluno }) {
             </View>
           ) : (
             <View style={styles.vazio}>
-              <Mascote size={30} segments={3} />
+              <Mascote size={160} />
               <EmptyState
                 icon={Inbox}
                 title={agenda ? 'Agenda sem registros' : 'Sem agenda neste dia'}

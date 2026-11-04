@@ -3,7 +3,6 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '../components/ui/Button';
-import { Mascote } from '../components/ui/Mascote';
 import { useAuth } from '../context/AuthContext';
 import { colors, spacing, typography } from '../theme';
 
@@ -14,7 +13,6 @@ export function SemConexaoScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
-        <Mascote size={40} segments={3} />
         <Text style={styles.title}>Não conseguimos conectar</Text>
         <Text style={styles.message}>{bootError ?? 'Verifique sua internet e tente novamente.'}</Text>
         <View style={styles.actions}>

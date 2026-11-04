@@ -64,7 +64,7 @@ export function PerfilScreen() {
           <Text style={styles.headerSubtitle}>Seus dados e dos seus filhos</Text>
           <AmbienteBadge />
         </View>
-        <Mascote size={26} segments={3} />
+        <Mascote size={40} />
       </View>
 
       <ResponsavelCard data={me.data} error={me.error} isLoading={me.isLoading} onRetry={me.reload} />
