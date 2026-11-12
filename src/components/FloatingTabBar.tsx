@@ -1,4 +1,4 @@
-import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import type { MaterialTopTabBarProps } from '@react-navigation/material-top-tabs';
 import type { LucideIcon } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { Keyboard, Platform, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
@@ -16,8 +16,10 @@ const DURATION_MS = 200;
 /** Texto do badge: ink sobre accent passa de 4,5:1 nos dois temas. */
 const ON_ACCENT = '#1b1d26';
 
-interface FloatingTabBarProps extends BottomTabBarProps {
+interface FloatingTabBarProps extends MaterialTopTabBarProps {
   icons: Record<string, LucideIcon>;
+  /** Contagem do indicador por rota (0 ou ausente = sem indicador). */
+  badges?: Record<string, number>;
 }
 
 /** true enquanto o teclado está aberto (a barra some para não cobrir os campos). */
@@ -39,7 +41,7 @@ function useKeyboardVisible(): boolean {
 }
 
 /** Barra de abas flutuante: pílula suspensa, aba ativa em primary com rótulo ao lado do ícone. */
-export function FloatingTabBar({ state, descriptors, navigation, icons }: FloatingTabBarProps) {
+export function FloatingTabBar({ state, descriptors, navigation, icons, badges }: FloatingTabBarProps) {
   const t = useTokens();
   const { width } = useWindowDimensions();
   const bottom = useFloatingTabBarBottom();
@@ -67,7 +69,7 @@ export function FloatingTabBar({ state, descriptors, navigation, icons }: Floati
           const { options } = descriptors[route.key];
           const focused = state.index === index;
           const label = options.title ?? route.name;
-          const badge = typeof options.tabBarBadge === 'number' ? options.tabBarBadge : null;
+          const badge = badges?.[route.name] || null;
           const a11yLabel = badge
             ? `${label}, ${badge} ${badge === 1 ? 'pendência' : 'pendências'}`
             : label;
