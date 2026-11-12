@@ -54,6 +54,14 @@ export interface Aluno {
   idade: number;
   turma: string | null;
   periodo: Periodo | null;
+  /** Presenças e faltas do mês corrente. Ausente em APIs antigas. */
+  resumo_mes?: ResumoMes;
+}
+
+export interface ResumoMes {
+  mes: string; // AAAA-MM
+  presencas: number;
+  faltas: number;
 }
 
 /** GET /alunos/{aluno}/matricula (só a matrícula ativa; 404 se não houver). */
