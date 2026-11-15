@@ -1,29 +1,8 @@
-import React, { useMemo } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import React from 'react';
 
-import { spacing, useColors, type Palette } from '../../theme';
+import { CentopeiaLoader } from './CentopeiaLoader';
 
+/** Mesmo loader do app (mascote girando); mantido por compatibilidade com quem já o usa. */
 export function LoadingView({ label }: { label?: string }) {
-  const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-  return (
-    <View style={styles.container}>
-      <ActivityIndicator color={colors.brand} size="large" />
-      {label ? <Text style={styles.label}>{label}</Text> : null}
-    </View>
-  );
+  return <CentopeiaLoader label={label} />;
 }
-
-const makeStyles = (colors: Palette) => StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.xl,
-  },
-  label: {
-    color: colors.textSecondary,
-    fontSize: 14,
-  },
-});

@@ -1,16 +1,15 @@
-import React, { useState, useMemo } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
 
 import { BoletoResult } from './BoletoResult';
 import { descricaoFatura } from './FaturaCard';
 import { PaymentMethodPicker } from './PaymentMethodPicker';
 import { PixResult } from './PixResult';
 import { BottomSheet } from '../ui/BottomSheet';
+import { CentopeiaLoader } from '../ui/CentopeiaLoader';
 import { Notice } from '../ui/Notice';
 import { errorMessage } from '../../services/errors';
 import { pagarFatura, type FormaPagamento, type ResultadoPagamento } from '../../services/faturas';
 import type { Fatura } from '../../services/types';
-import { spacing, useColors, type Palette } from '../../theme';
 import { formatCurrencyBRL } from '../../utils/format';
 
 interface PagamentoSheetProps {
@@ -22,8 +21,6 @@ interface PagamentoSheetProps {
 
 /** Escolha Pix/Boleto → POST /faturas/{id}/pagamento → QR code ou boleto. */
 export function PagamentoSheet({ fatura, visible, onClose }: PagamentoSheetProps) {
-  const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ResultadoPagamento | null>(null);
@@ -64,10 +61,7 @@ export function PagamentoSheet({ fatura, visible, onClose }: PagamentoSheetProps
         <>
           {error ? <Notice message={error} /> : null}
           {submitting ? (
-            <View style={styles.loading}>
-              <ActivityIndicator color={colors.brandDark} size="large" />
-              <Text style={styles.loadingLabel}>Gerando pagamento...</Text>
-            </View>
+            <CentopeiaLoader label="Gerando pagamento..." />
           ) : (
             <PaymentMethodPicker onSelect={handleSelect} />
           )}
@@ -76,15 +70,3 @@ export function PagamentoSheet({ fatura, visible, onClose }: PagamentoSheetProps
     </BottomSheet>
   );
 }
-
-const makeStyles = (colors: Palette) => StyleSheet.create({
-  loading: {
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.xl,
-  },
-  loadingLabel: {
-    color: colors.textSecondary,
-    fontSize: 14,
-  },
-});
