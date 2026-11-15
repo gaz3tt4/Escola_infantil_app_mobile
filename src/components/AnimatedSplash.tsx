@@ -1,37 +1,30 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, Image, StyleSheet, View } from 'react-native';
+import { AccessibilityInfo, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
-  withSequence,
-  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { font } from '../theme/fonts';
 import { lightTokens } from '../theme/tokens';
-
-// Arte oficial, sem edição: só rotação e escala uniformes. Mesmo arquivo da tela de login e da splash nativa.
-const MASCOTE = require('../../assets/mascote/centopeia-sentada-recorte.png');
-const PROPORCAO = 276 / 279;
+import { alturaMascote, MascoteGirando } from './ui/MascoteGirando';
 
 // Tokens do design system (iguais no claro e no escuro).
 const COR_FUNDO = lightTokens.primary; // #84cc3a
 const COR_TEXTO = lightTokens.onPrimary; // #1a2e05
 
-// Linha do tempo (ms). Ajuste aqui.
-const LARGURA_MASCOTE = 200; // igual a imageWidth da splash nativa
-const DURACAO_ENTRADA = 900;
+// Linha do tempo (ms), contada a partir do mascote aparecer na tela. Ajuste aqui.
+const LARGURA_MASCOTE = 160; // igual a imageWidth da splash nativa (app.json)
 const INICIO_NOME = 1000;
 const DURACAO_NOME = 300;
 const SOBE_NOME = 8;
 const DURACAO_MINIMA = 1800;
 const DURACAO_SAIDA = 250;
 const DURACAO_MAXIMA = 4000; // se o app não ficar pronto, sai mesmo assim
-const DURACAO_REDUZIDA = 300;
 
 interface AnimatedSplashProps {
   /** true quando fontes e leitura do token terminaram. */
@@ -45,13 +38,12 @@ interface AnimatedSplashProps {
 /** Splash animada: mascote gira no sentido horário (-360° → 0°), nome aparece, overlay some em fade. */
 export function AnimatedSplash({ ready, onFinish, onMascoteLayout }: AnimatedSplashProps) {
   const [reduzir, setReduzir] = useState<boolean | null>(null);
+  // O relógio só corre depois que o mascote está na tela (e a splash nativa foi escondida).
+  const [visivel, setVisivel] = useState(false);
   const [minimoCumprido, setMinimoCumprido] = useState(false);
   const [estourou, setEstourou] = useState(false);
   const saiu = useRef(false);
 
-  const rotacao = useSharedValue(-360);
-  const escala = useSharedValue(0.6);
-  const opacidadeMascote = useSharedValue(0.4);
   const opacidadeNome = useSharedValue(0);
   const subidaNome = useSharedValue(SOBE_NOME);
   const opacidadeGeral = useSharedValue(1);
@@ -62,36 +54,30 @@ export function AnimatedSplash({ ready, onFinish, onMascoteLayout }: AnimatedSpl
       .catch(() => setReduzir(false));
   }, []);
 
-  // Começa a linha do tempo só depois de saber a preferência de movimento.
   useEffect(() => {
-    if (reduzir === null) return;
-    const suave = { duration: DURACAO_REDUZIDA, easing: Easing.out(Easing.cubic) };
-    if (reduzir) {
-      rotacao.value = 0;
-      escala.value = 1;
-      opacidadeMascote.value = 0;
-      opacidadeMascote.value = withTiming(1, suave);
-      opacidadeNome.value = withDelay(INICIO_NOME, withTiming(1, suave));
-      subidaNome.value = 0;
-    } else {
-      const saida = Easing.out(Easing.cubic);
-      rotacao.value = withTiming(0, { duration: DURACAO_ENTRADA, easing: saida });
-      opacidadeMascote.value = withTiming(1, { duration: DURACAO_ENTRADA, easing: saida });
-      escala.value = withSequence(
-        withTiming(1, { duration: DURACAO_ENTRADA, easing: saida }),
-        withSpring(1.04, { damping: 12, stiffness: 260 }),
-        withSpring(1, { damping: 14, stiffness: 220 }),
-      );
-      opacidadeNome.value = withDelay(INICIO_NOME, withTiming(1, { duration: DURACAO_NOME }));
-      subidaNome.value = withDelay(INICIO_NOME, withTiming(0, { duration: DURACAO_NOME, easing: saida }));
-    }
+    if (!visivel || reduzir === null) return;
+    const saida = Easing.out(Easing.cubic);
+    opacidadeNome.value = withDelay(INICIO_NOME, withTiming(1, { duration: DURACAO_NOME }));
+    subidaNome.value = reduzir
+      ? 0
+      : withDelay(INICIO_NOME, withTiming(0, { duration: DURACAO_NOME, easing: saida }));
     const minimo = setTimeout(() => setMinimoCumprido(true), DURACAO_MINIMA);
-    const maximo = setTimeout(() => setEstourou(true), DURACAO_MAXIMA);
-    return () => {
-      clearTimeout(minimo);
-      clearTimeout(maximo);
-    };
-  }, [reduzir, rotacao, escala, opacidadeMascote, opacidadeNome, subidaNome]);
+    return () => clearTimeout(minimo);
+  }, [visivel, reduzir, opacidadeNome, subidaNome]);
+
+  // Rede de segurança: corre desde a montagem, independente de layout/reduzir movimento.
+  // Ao estourar, garante que a splash nativa também some.
+  const aoMascoteLayoutRef = useRef(onMascoteLayout);
+  useEffect(() => {
+    aoMascoteLayoutRef.current = onMascoteLayout;
+  }, [onMascoteLayout]);
+  useEffect(() => {
+    const maximo = setTimeout(() => {
+      aoMascoteLayoutRef.current?.();
+      setEstourou(true);
+    }, DURACAO_MAXIMA);
+    return () => clearTimeout(maximo);
+  }, []);
 
   // Sai quando a animação terminou E o app está pronto (ou quando estoura o limite).
   useEffect(() => {
@@ -104,28 +90,31 @@ export function AnimatedSplash({ ready, onFinish, onMascoteLayout }: AnimatedSpl
   }, [minimoCumprido, ready, estourou, opacidadeGeral, onFinish]);
 
   const estiloGeral = useAnimatedStyle(() => ({ opacity: opacidadeGeral.value }));
-  const estiloMascote = useAnimatedStyle(() => ({
-    opacity: opacidadeMascote.value,
-    transform: [{ rotate: `${rotacao.value}deg` }, { scale: escala.value }],
-  }));
   const estiloNome = useAnimatedStyle(() => ({
     opacity: opacidadeNome.value,
     transform: [{ translateY: subidaNome.value }],
   }));
 
+  function aoLayout() {
+    setVisivel(true);
+    onMascoteLayout?.();
+  }
+
   return (
-    <Animated.View style={[styles.overlay, estiloGeral]} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+    <Animated.View
+      style={[styles.overlay, estiloGeral]}
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    >
       <View style={styles.centro}>
-        <Animated.View style={[styles.mascote, estiloMascote]} onLayout={onMascoteLayout}>
-          <Image source={MASCOTE} style={styles.imagem} resizeMode="contain" />
-        </Animated.View>
+        {reduzir === null ? null : (
+          <MascoteGirando size={LARGURA_MASCOTE} modo="entrada" reduzir={reduzir} onLayout={aoLayout} />
+        )}
         <Animated.Text style={[styles.nome, estiloNome]}>Centopeia</Animated.Text>
       </View>
     </Animated.View>
   );
 }
-
-const ALTURA_MASCOTE = LARGURA_MASCOTE / PROPORCAO;
 
 const styles = StyleSheet.create({
   overlay: {
@@ -134,24 +123,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1000,
+    elevation: 1000,
   },
   // O mascote fica no centro exato (como a splash nativa); o nome pende abaixo sem deslocá-lo.
   centro: {
     width: LARGURA_MASCOTE,
-    height: ALTURA_MASCOTE,
+    height: alturaMascote(LARGURA_MASCOTE),
     alignItems: 'center',
-  },
-  mascote: {
-    width: LARGURA_MASCOTE,
-    height: ALTURA_MASCOTE,
-  },
-  imagem: {
-    width: LARGURA_MASCOTE,
-    height: ALTURA_MASCOTE,
   },
   nome: {
     position: 'absolute',
-    top: ALTURA_MASCOTE + 16,
+    top: alturaMascote(LARGURA_MASCOTE) + 16,
     fontFamily: font.bold,
     fontSize: 24,
     lineHeight: 32,
