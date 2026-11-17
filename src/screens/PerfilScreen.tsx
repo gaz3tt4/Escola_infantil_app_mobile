@@ -8,7 +8,6 @@ import { StatGrid } from '../components/perfil/StatGrid';
 import { AmbienteBadge } from '../components/ui/AmbienteBadge';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
-import { DemoBadge } from '../components/ui/DemoBadge';
 import { ErrorState } from '../components/ui/ErrorState';
 import { LoadingView } from '../components/ui/LoadingView';
 import { Mascote } from '../components/ui/Mascote';
@@ -18,7 +17,6 @@ import { useAuth } from '../context/AuthContext';
 import { useAsyncResource } from '../hooks/useAsyncResource';
 import { obterMatriculaAtiva, PERIODO_LABEL } from '../services/alunos';
 import { getMe } from '../services/auth';
-import { obterResumoDoAluno } from '../services/perfil';
 import type { Aluno, Responsavel } from '../services/types';
 import { spacing, useColors, useTypography, type Palette } from '../theme';
 import { firstName, formatCPF, formatCurrencyBRL, formatDateBR, formatTelefone } from '../utils/format';
@@ -116,17 +114,14 @@ function ResponsavelCard({
   );
 }
 
-/** Dados do aluno em foco: matrícula (API real) + resumo do mês (mock; os recados têm aba própria). */
+/** Dados do aluno em foco: matrícula + resumo do mês (presenças/faltas reais; os recados têm aba própria). */
 function AlunoSection({ aluno }: { aluno: Aluno }) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const typography = useTypography();
   const loader = useCallback(
     () =>
-      Promise.all([obterMatriculaAtiva(aluno.id), obterResumoDoAluno(aluno.id)]).then(([matricula, resumo]) => ({
-        matricula,
-        resumo,
-      })),
+      obterMatriculaAtiva(aluno.id).then((matricula) => ({ matricula })),
     [aluno.id]
   );
   const { data, error, isLoading, reload } = useAsyncResource(loader);
@@ -153,15 +148,10 @@ function AlunoSection({ aluno }: { aluno: Aluno }) {
         ) : null}
       </Card>
 
-      {data ? (
-        <>
-          <View style={styles.sectionHeader}>
-            <Text style={typography.sectionTitle}>Resumo do mês</Text>
-            <DemoBadge />
-          </View>
-          <StatGrid resumo={data.resumo} />
-        </>
-      ) : null}
+      <View style={styles.sectionHeader}>
+        <Text style={typography.sectionTitle}>Resumo do mês</Text>
+      </View>
+      <StatGrid resumo={aluno.resumo_mes} />
     </>
   );
 }

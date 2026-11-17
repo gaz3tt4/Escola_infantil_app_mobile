@@ -4,8 +4,8 @@ import { StyleSheet, Text, View } from 'react-native';
 import type { LucideIcon } from 'lucide-react-native';
 
 import { Icon } from '../ui/Icon';
-import { CalendarX, Moon, Palette } from '../ui/icons';
-import type { ResumoAluno } from '../../services/perfil';
+import { CalendarCheck, CalendarX } from '../ui/icons';
+import type { ResumoMes } from '../../services/types';
 import { radius, spacing, useColors } from '../../theme';
 
 interface StatItem {
@@ -16,18 +16,12 @@ interface StatItem {
   fg: string;
 }
 
-export function StatGrid({ resumo }: { resumo: ResumoAluno }) {
+export function StatGrid({ resumo }: { resumo?: ResumoMes }) {
   const colors = useColors();
+  const fmt = (n?: number) => (resumo ? String(n) : '—');
   const items: StatItem[] = [
-    { icon: CalendarX, label: 'Faltas', value: String(resumo.faltas), bg: colors.coralSoft, fg: colors.danger },
-    { icon: Palette, label: 'Atividades', value: String(resumo.atividades), bg: colors.skySoft, fg: colors.skyStrong },
-    {
-      icon: Moon,
-      label: 'Sonecas',
-      value: `${resumo.sonecas.quantidade} · ${resumo.sonecas.duracaoMediaMin}min`,
-      bg: colors.lavenderSoft,
-      fg: colors.lavenderStrong,
-    },
+    { icon: CalendarCheck, label: 'Presença', value: fmt(resumo?.presencas), bg: colors.skySoft, fg: colors.skyStrong },
+    { icon: CalendarX, label: 'Faltas', value: fmt(resumo?.faltas), bg: colors.coralSoft, fg: colors.danger },
   ];
 
   return (
@@ -46,12 +40,10 @@ export function StatGrid({ resumo }: { resumo: ResumoAluno }) {
 const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: spacing.sm,
   },
   statCard: {
-    flexGrow: 1,
-    flexBasis: '45%',
+    flex: 1,
     borderRadius: radius.md,
     padding: spacing.sm + 2,
     alignItems: 'center',
