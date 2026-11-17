@@ -44,12 +44,13 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/splash-icon.png",
-          "imageWidth": 200,
+          "image": "./assets/mascote/centopeia-sentada-recorte.png",
+          "imageWidth": 160,
           "resizeMode": "contain",
-          "backgroundColor": "#F2F7EC",
+          "backgroundColor": "#84cc3a",
           "dark": {
-            "backgroundColor": "#131814"
+            "image": "./assets/mascote/centopeia-sentada-recorte.png",
+            "backgroundColor": "#84cc3a"
           }
         }
       ],
